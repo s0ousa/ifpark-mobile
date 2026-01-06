@@ -16,6 +16,7 @@ import {
 import {LicensePlate, formatPlate, PlateType} from '../models/LicensePlate';
 import {TextRecognitionService} from '../services/TextRecognitionService';
 import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import { Button } from 'react-native-paper';
 
 export const CameraScreen: React.FC = () => {
   const [detectedPlates, setDetectedPlates] = useState<LicensePlate[]>([]);
@@ -136,7 +137,6 @@ export const CameraScreen: React.FC = () => {
             <TouchableOpacity style={styles.primaryButton} onPress={takePicture}>
               <Text style={styles.primaryButtonText}>📷 Tirar Foto</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={pickFromGallery}>
@@ -144,6 +144,8 @@ export const CameraScreen: React.FC = () => {
                 🖼️ Escolher da Galeria
               </Text>
             </TouchableOpacity>
+
+    
           </View>
         ) : (
           <ActivityIndicator size="large" color="#2196F3" />
