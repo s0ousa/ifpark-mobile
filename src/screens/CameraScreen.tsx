@@ -16,7 +16,6 @@ import {
 import {LicensePlate, formatPlate, PlateType} from '../models/LicensePlate';
 import {TextRecognitionService} from '../services/TextRecognitionService';
 import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
-import { Button } from 'react-native-paper';
 
 export const CameraScreen: React.FC = () => {
   const [detectedPlates, setDetectedPlates] = useState<LicensePlate[]>([]);
@@ -64,7 +63,7 @@ export const CameraScreen: React.FC = () => {
     launchCamera(
       {
         mediaType: 'photo',
-        quality: 0.85,
+        quality: 0.8,
         saveToPhotos: false,
       },
       handleImageResponse,
@@ -75,7 +74,7 @@ export const CameraScreen: React.FC = () => {
     launchImageLibrary(
       {
         mediaType: 'photo',
-        quality: 0.85,
+        quality: 0.8,
       },
       handleImageResponse,
     );

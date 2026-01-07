@@ -3,7 +3,6 @@ import { View, ScrollView } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, Icon } from 'react-native-paper';
 
 export default function LoginScreen() {
-  // HOOK DO TEMA: É aqui que puxamos as cores definidas no arquivo theme
   const theme = useTheme(); 
   
   const [email, setEmail] = useState('');
@@ -23,7 +22,6 @@ export default function LoginScreen() {
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         
-        {/* HEADER: Usa a cor Primária (Verde Escuro #075E54) */}
        <Surface 
           elevation={0}
           style={{
@@ -50,7 +48,7 @@ export default function LoginScreen() {
                     fontSize: 32, 
                     fontWeight: 'bold', 
                     color: theme.colors.onPrimary, 
-                    marginLeft: 6 // <--- Espaçamento entre o ícone e o nome
+                    marginLeft: 6 
                 }}>
                     IfPark
                 </Text>
@@ -61,7 +59,6 @@ export default function LoginScreen() {
           </Text>
         </Surface>
 
-        {/* FORMULÁRIO */}
         <View style={{ flex: 1, padding: 24 }}>
           <Text style={{
             fontSize: 24,
@@ -73,7 +70,6 @@ export default function LoginScreen() {
             Bem-vindo(a)
           </Text>
 
-          {/* INPUT EMAIL */}
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 14, color: '#666', marginBottom: 8, fontWeight: '500' }}>
               Email
@@ -95,7 +91,6 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* INPUT SENHA */}
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 14, color: '#666', marginBottom: 8, fontWeight: '500' }}>
               Senha
@@ -121,13 +116,11 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* BOTÃO ENTRAR: Aqui podemos usar o #128C7E (Secondary) ou #25D366 (Tertiary) */}
           <Button
             mode="contained"
             onPress={handleLogin}
             loading={loading}
             disabled={loading}
-            // Usando a cor Secundária (Médio) para o botão principal
             buttonColor={theme.colors.secondary} 
             textColor={theme.colors.onSecondary}
             style={{ marginTop: 16, borderRadius: 8 }}
@@ -137,7 +130,6 @@ export default function LoginScreen() {
             Entrar
           </Button>
 
-          {/* CADASTRE-SE: Usando o Verde Vibrante (#25D366) ou o Médio para o link */}
           <View style={{
             flexDirection: 'row',
             justifyContent: 'center',
@@ -148,7 +140,6 @@ export default function LoginScreen() {
             <Button
               mode="text"
               onPress={() => console.log('Cadastre-se')}
-              // Destaque no texto com a cor Secundária
               textColor={theme.colors.secondary}
               compact
               style={{ marginLeft: -8 }}
