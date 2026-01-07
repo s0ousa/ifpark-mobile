@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, Icon } from 'react-native-paper';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }: any) {
   const theme = useTheme(); 
   
   const [email, setEmail] = useState('');
@@ -139,7 +139,7 @@ export default function LoginScreen() {
             <Text style={{ fontSize: 14, color: '#666' }}>Não tem uma conta? </Text>
             <Button
               mode="text"
-              onPress={() => console.log('Cadastre-se')}
+              onPress={() => navigation.navigate('Register')}
               textColor={theme.colors.secondary}
               compact
               style={{ marginLeft: -8 }}
