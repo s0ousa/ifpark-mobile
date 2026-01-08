@@ -9,9 +9,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
-        <NavigationContainer>
-          <AuthStack />
-        </NavigationContainer>
+          <NavigationContainer>
+            <AuthStack />
+          </NavigationContainer>
       </PaperProvider>
     </SafeAreaProvider>
   );
