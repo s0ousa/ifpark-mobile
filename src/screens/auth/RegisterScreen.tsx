@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Keyboard, Alert } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, IconButton, Divider, HelperText, ActivityIndicator } from 'react-native-paper';
-import Select from '../../components/Select.tsx'; 
+import Select from '../../components/Select.tsx';
 
 import { CampusService } from '../../services/CampusService.ts';
 import { AuthService } from '../../services/AuthService.ts';
@@ -31,13 +31,14 @@ export default function RegisterScreen({ navigation }: any) {
     numero: '', // Mantido conforme pedido (string ou int no backend)
     cep: '',
     bairro: '',
+    matricula: '',
     campusId: ''
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [campusOptions, setCampusOptions] = useState([]);
-  const [loadingCep, setLoadingCep] = useState(false); 
+  const [loadingCep, setLoadingCep] = useState(false);
 
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function RegisterScreen({ navigation }: any) {
   const loadCampi = async () => {
     try {
       const data = await CampusService.findAll();
-      
+
       if (data.content && Array.isArray(data.content)) {
         const formattedOptions = data.content.map((c: any) => ({
           label: c.nome,
@@ -65,7 +66,7 @@ export default function RegisterScreen({ navigation }: any) {
 
 
 
-const handleCepChange = async (text: string) => {
+  const handleCepChange = async (text: string) => {
     let v = text.replace(/\D/g, '');
     v = v.replace(/^(\d{5})(\d)/, '$1-$2');
     updateField('cep', v);
@@ -75,13 +76,13 @@ const handleCepChange = async (text: string) => {
       try {
         const addressData = await ViaCepService.getAddress(v);
         if (addressData) {
-            setFormData(prev => ({
-                ...prev,
-                logradouro: addressData.logradouro,
-                bairro: addressData.bairro,
-                cidade: addressData.localidade,
-                estado: addressData.uf,
-            }));
+          setFormData(prev => ({
+            ...prev,
+            logradouro: addressData.logradouro,
+            bairro: addressData.bairro,
+            cidade: addressData.localidade,
+            estado: addressData.uf,
+          }));
         }
       } catch (error: any) {
         Alert.alert("Atenção", error.message || "Erro ao buscar CEP");
@@ -109,9 +110,14 @@ const handleCepChange = async (text: string) => {
 
   const handleRegister = async () => {
     Keyboard.dismiss();
-    
+
     if (formData.senha !== formData.confirmSenha) {
       Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    if (formData.tipo === 'ALUNO' && !formData.matricula) {
+      Alert.alert("Atenção", "A matrícula é obrigatória para alunos.");
       return;
     }
 
@@ -125,12 +131,31 @@ const handleCepChange = async (text: string) => {
     const { confirmSenha, ...payload } = formData;
 
     try {
-      await AuthService.register(payload);
-      
-      Alert.alert("Sucesso", "Conta criada com sucesso!", [
-        { text: "OK", onPress: () => navigation.goBack() } 
-      ]);
-      
+      const response = await AuthService.register(payload);
+      console.log(response);
+      Alert.alert(
+        "Sucesso",
+        "Conta criada com sucesso! Deseja cadastrar seu veículo agora?",
+        [
+          {
+            text: "Agora não",
+            onPress: () => navigation.goBack(),
+            style: "cancel"
+          },
+          {
+            text: "Cadastrar Veículo",
+            onPress: () => {
+              const pessoaId = response?.pessoa?.id;
+              if (pessoaId) {
+                navigation.navigate('VehicleRegister', { pessoaId });
+              } else {
+                navigation.goBack();
+              }
+            }
+          }
+        ]
+      );
+
     } catch (error: any) {
       Alert.alert("Erro no Cadastro", error.message);
     } finally {
@@ -149,23 +174,23 @@ const handleCepChange = async (text: string) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <Surface 
+      <Surface
         elevation={2}
         style={{
-          backgroundColor: theme.colors.primary, 
-          paddingTop: 60, 
+          backgroundColor: theme.colors.primary,
+          paddingTop: 60,
           paddingBottom: 8,
           paddingHorizontal: 16,
           zIndex: 10
-        }} 
+        }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <IconButton 
-            icon="arrow-left" 
+          <IconButton
+            icon="arrow-left"
             iconColor={theme.colors.onPrimary}
             size={24}
             onPress={() => navigation.goBack()}
-            style={{ marginLeft: -12 }} 
+            style={{ marginLeft: -12 }}
           />
           <Text variant="headlineSmall" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
             Criar Conta
@@ -207,95 +232,104 @@ const handleCepChange = async (text: string) => {
             style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
           />
         </View>
-        
-        
+
+
 
         <View style={{ marginBottom: 12 }}>
           <SectionTitle title="Vínculo Institucional" />
-            <Select
-              label="Campus"
-              value={formData.campusId}
-              options={campusOptions}
-              onSelect={(newValue) => updateField('campusId', newValue)}
-              error={false}
-              icon="office-building-marker"
+          <Select
+            label="Campus"
+            value={formData.campusId}
+            options={campusOptions}
+            onSelect={(newValue) => updateField('campusId', newValue)}
+            error={false}
+            icon="office-building-marker"
+          />
+
+          <Select
+            label="Tipo de Usuário"
+            value={formData.tipo}
+            options={USER_TYPES}
+            onSelect={(newValue) => updateField('tipo', newValue)}
+            icon="account-group"
+          />
+
+          {(formData.tipo === 'ALUNO' || formData.tipo === 'SERVIDOR') && (
+            <TextInput
+              mode="outlined"
+              label={formData.tipo === 'ALUNO' ? "Matrícula *" : "Matrícula"}
+              value={formData.matricula}
+              onChangeText={(t) => updateField('matricula', t)}
+              left={<TextInput.Icon icon="badge-account-horizontal" color={theme.colors.secondary} />}
+              style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
             />
-        </View>
-     
-        <View style={{ marginBottom: 12 }}>
-         <Select
-          label="Tipo de Usuário"
-          value={formData.tipo}
-          options={USER_TYPES} 
-          onSelect={(newValue) => updateField('tipo', newValue)}
-          icon="account-group"
-        />
+          )}
         </View>
 
         <View style={{ marginBottom: 12 }}>
           <SectionTitle title="Dados de Acesso" />
           <TextInput
-                  mode="outlined"
-                  label="Email"
-                  value={formData.email}
-                  onChangeText={(t) => updateField('email', t)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  left={<TextInput.Icon icon="email" color={theme.colors.secondary} />}
-                  style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
-                />
+            mode="outlined"
+            label="Email"
+            value={formData.email}
+            onChangeText={(t) => updateField('email', t)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            left={<TextInput.Icon icon="email" color={theme.colors.secondary} />}
+            style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
+          />
 
-                <TextInput
-                  mode="outlined"
-                  label="Senha"
-                  secureTextEntry={!showPassword}
-                  value={formData.senha}
-                  onChangeText={(t) => updateField('senha', t)}
-                  left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
-                  right={
-                    <TextInput.Icon 
-                      icon={showPassword ? "eye-off" : "eye"} 
-                      onPress={() => setShowPassword(!showPassword)} 
-                    />
-                  }
-                  style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
-                />
+          <TextInput
+            mode="outlined"
+            label="Senha"
+            secureTextEntry={!showPassword}
+            value={formData.senha}
+            onChangeText={(t) => updateField('senha', t)}
+            left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+            style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
+          />
 
-                <TextInput
-                  mode="outlined"
-                  label="Confirmar Senha"
-                  secureTextEntry={!showPassword}
-                  value={formData.confirmSenha}
-                  onChangeText={(t) => updateField('confirmSenha', t)}
-                  left={<TextInput.Icon icon="lock-check" color={theme.colors.secondary} />}
-                  error={formData.confirmSenha !== '' && formData.senha !== formData.confirmSenha}
-                  right={
-                    <TextInput.Icon 
-                      icon={showPassword ? "eye-off" : "eye"} 
-                      onPress={() => setShowPassword(!showPassword)} 
-                    />
-                  }
-                  style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
-                />
-                {formData.confirmSenha !== '' && formData.senha !== formData.confirmSenha && (
-                  <HelperText type="error">As senhas não conferem</HelperText>
-                )}
-                
+          <TextInput
+            mode="outlined"
+            label="Confirmar Senha"
+            secureTextEntry={!showPassword}
+            value={formData.confirmSenha}
+            onChangeText={(t) => updateField('confirmSenha', t)}
+            left={<TextInput.Icon icon="lock-check" color={theme.colors.secondary} />}
+            error={formData.confirmSenha !== '' && formData.senha !== formData.confirmSenha}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+            style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
+          />
+          {formData.confirmSenha !== '' && formData.senha !== formData.confirmSenha && (
+            <HelperText type="error">As senhas não conferem</HelperText>
+          )}
+
         </View>
-        
+
         <View >
 
           <SectionTitle title="Endereço" />
-            <TextInput
-              mode="outlined"
-              label="CEP"
-              value={formData.cep}
-              onChangeText={handleCepChange}
-              keyboardType="numeric"
-              maxLength={9}
-              right={loadingCep ? <TextInput.Icon icon={() => <ActivityIndicator size={20} />} /> : null}
-              style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
-            />
+          <TextInput
+            mode="outlined"
+            label="CEP"
+            value={formData.cep}
+            onChangeText={handleCepChange}
+            keyboardType="numeric"
+            maxLength={9}
+            right={loadingCep ? <TextInput.Icon icon={() => <ActivityIndicator size={20} />} /> : null}
+            style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
+          />
 
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
             <TextInput
@@ -351,9 +385,9 @@ const handleCepChange = async (text: string) => {
         >
           Finalizar Cadastro
         </Button>
-        
-        <Button 
-          mode="text" 
+
+        <Button
+          mode="text"
           onPress={() => navigation.navigate('Login')}
           textColor={theme.colors.secondary}
           style={{ marginTop: 16 }}
