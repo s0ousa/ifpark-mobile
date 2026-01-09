@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, Icon } from 'react-native-paper';
-import { AuthService } from '../../services/AuthService';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function LoginScreen({ navigation }: any) {
   const theme = useTheme();
+  const signIn = useAuthStore((state) => state.signIn);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,14 +15,8 @@ export default function LoginScreen({ navigation }: any) {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const response = await AuthService.login({ email, senha: password });
-
-      // Assuming success if we didn't throw. 
-      // User asked to just confirm login.
-      navigation.replace('TestHome');
-
+      await signIn({ email, senha: password });
     } catch (error: any) {
-      console.error('Login Error:', error);
       Alert.alert("Erro no Login", error.message);
     } finally {
       setLoading(false);
@@ -91,10 +86,8 @@ export default function LoginScreen({ navigation }: any) {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              // Ícone usa a cor secundária (Verde Médio #128C7E)
               left={<TextInput.Icon icon="email" color={theme.colors.secondary} />}
               style={{ backgroundColor: theme.colors.surface }}
-              // Borda inativa cinza, borda ativa Verde Escuro
               outlineColor={theme.colors.outline}
               activeOutlineColor={theme.colors.primary}
               outlineStyle={{ borderRadius: 8 }}

@@ -1,9 +1,15 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
+import { useAuthStore } from '../store/useAuthStore';
 
-export default function TestHomeScreen({ navigation }: any) {
+export default function TestHomeScreen() {
     const theme = useTheme();
+    const signOut = useAuthStore((state) => state.signOut);
+
+    const handleLogout = async () => {
+        await signOut();
+    };
 
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
@@ -16,10 +22,7 @@ export default function TestHomeScreen({ navigation }: any) {
 
             <Button
                 mode="contained"
-                onPress={() => navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Login' }],
-                })}
+                onPress={handleLogout}
                 style={{ backgroundColor: theme.colors.error }}
             >
                 Sair
