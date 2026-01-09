@@ -28,7 +28,7 @@ export default function RegisterScreen({ navigation }: any) {
     cidade: '',
     estado: '',
     logradouro: '',
-    numero: '', // Mantido conforme pedido (string ou int no backend)
+    numero: '',
     cep: '',
     bairro: '',
     matricula: '',

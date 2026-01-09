@@ -1,59 +1,69 @@
 import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, Icon } from 'react-native-paper';
+import { AuthService } from '../../services/AuthService';
 
 export default function LoginScreen({ navigation }: any) {
-  const theme = useTheme(); 
-  
+  const theme = useTheme();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [securePassword, setSecurePassword] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      console.log('Login:', { email, password });
+    try {
+      const response = await AuthService.login({ email, senha: password });
+
+      // Assuming success if we didn't throw. 
+      // User asked to just confirm login.
+      navigation.replace('TestHome');
+
+    } catch (error: any) {
+      console.error('Login Error:', error);
+      Alert.alert("Erro no Login", error.message);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        
-       <Surface 
+
+        <Surface
           elevation={0}
           style={{
-            backgroundColor: theme.colors.primary, 
+            backgroundColor: theme.colors.primary,
             paddingTop: 120,
             paddingBottom: 40,
             alignItems: 'center',
             borderBottomLeftRadius: 30,
             borderBottomRightRadius: 30,
-          }} 
+          }}
         >
-          <View style={{ 
-            flexDirection: 'row', 
+          <View style={{
+            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: 8 
+            marginBottom: 8
           }}>
-                <Icon
-                    source="car-estate"
-                    color={theme.colors.tertiary}
-                    size={45} 
-                />
-                <Text style={{ 
-                    fontSize: 32, 
-                    fontWeight: 'bold', 
-                    color: theme.colors.onPrimary, 
-                    marginLeft: 6 
-                }}>
-                    IfPark
-                </Text>
+            <Icon
+              source="car-estate"
+              color={theme.colors.tertiary}
+              size={45}
+            />
+            <Text style={{
+              fontSize: 32,
+              fontWeight: 'bold',
+              color: theme.colors.onPrimary,
+              marginLeft: 6
+            }}>
+              IfPark
+            </Text>
           </View>
-            
+
           <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.9)' }}>
             Sistema Gerenciador de Estacionamentos do IFBA
           </Text>
@@ -121,7 +131,7 @@ export default function LoginScreen({ navigation }: any) {
             onPress={handleLogin}
             loading={loading}
             disabled={loading}
-            buttonColor={theme.colors.secondary} 
+            buttonColor={theme.colors.secondary}
             textColor={theme.colors.onSecondary}
             style={{ marginTop: 16, borderRadius: 8 }}
             contentStyle={{ paddingVertical: 8 }}

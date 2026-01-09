@@ -11,5 +11,18 @@ export const AuthService = {
       }
       throw new Error("Erro de conexão com o servidor");
     }
+  },
+
+  login: async (credentials: any) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const errorMessage = error.response.data.message || error.response.data.error || "Erro ao fazer login";
+        throw new Error(errorMessage);
+      }
+      throw new Error("Erro de conexão com o servidor de login");
+    }
   }
 };
