@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Keyboard, Alert } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, IconButton, Divider, HelperText, ActivityIndicator } from 'react-native-paper';
-import Select from '../../components/Select.tsx';
+import Select from '../../components/Select';
 
 import { CampusService } from '../../services/CampusService.ts';
 import { AuthService } from '../../services/AuthService.ts';

@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthService } from '../services/AuthService';
+import { UserService } from '../services/UserService';
 
 type User = {
     id: string;
     email: string;
     papel: 'ROLE_COMUM' | 'ROLE_VIGIA' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN' | string;
+    campusId?: string;
     pessoa?: {
         nome: string;
     };
@@ -54,18 +56,34 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const response = await AuthService.login(credentials);
 
+            // IMPORTANT: Set token in state FIRST so axios interceptor can use it
+            set({ token: response.token });
+
+            // Now fetch full user details to get campusId (with authenticated request)
+            const userDetails = await UserService.getUserById(response.id);
+
+            // Map API response to User type
             const userData: User = {
                 id: response.id,
                 email: response.email,
                 papel: response.role,
+                campusId: userDetails.campus?.id,
+                pessoa: userDetails.pessoa ? {
+                    nome: userDetails.pessoa.nome
+                } : undefined,
             };
+
+            // Save both user and token to storage
             await Promise.all([
                 AsyncStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData)),
                 AsyncStorage.setItem(STORAGE_TOKEN_KEY, response.token),
             ]);
 
-            set({ user: userData, token: response.token });
+            // Update user in state
+            set({ user: userData });
         } catch (error) {
+            // Clear token on error
+            set({ token: null });
             throw error;
         }
     },

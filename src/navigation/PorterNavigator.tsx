@@ -1,16 +1,15 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import TestHomeScreen from '../screens/TestHomeScreen';
+import PorterHomeScreen from '../screens/porter/PorterHomeScreen';
 
 const Stack = createNativeStackNavigator();
 
 export function PorterNavigator() {
     return (
-        <Stack.Navigator>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen
                 name="PorterHome"
-                component={TestHomeScreen}
-                options={{ title: 'Área da Portaria' }}
+                component={PorterHomeScreen}
             />
         </Stack.Navigator>
     );
