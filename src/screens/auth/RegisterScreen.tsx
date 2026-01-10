@@ -7,6 +7,7 @@ import Select from '../../components/Select';
 import { CampusService } from '../../services/CampusService.ts';
 import { AuthService } from '../../services/AuthService.ts';
 import { ViaCepService } from '../../services/ViaCepService.ts';
+import AppHeader from '../../components/AppHeader';
 
 const USER_TYPES = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -174,29 +175,11 @@ export default function RegisterScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <Surface
-        elevation={2}
-        style={{
-          backgroundColor: theme.colors.primary,
-          paddingTop: 60,
-          paddingBottom: 8,
-          paddingHorizontal: 16,
-          zIndex: 10
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <IconButton
-            icon="arrow-left"
-            iconColor={theme.colors.onPrimary}
-            size={24}
-            onPress={() => navigation.goBack()}
-            style={{ marginLeft: -12 }}
-          />
-          <Text variant="headlineSmall" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
-            Criar Conta
-          </Text>
-        </View>
-      </Surface>
+      <AppHeader
+        title="Criar Conta"
+        showBackButton
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 40 }}>
         <View style={{ marginBottom: 12 }}>

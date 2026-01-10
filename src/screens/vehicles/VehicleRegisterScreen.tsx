@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, Alert, Keyboard } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, IconButton } from 'react-native-paper';
 import { VehicleService } from '../../services/VehicleService';
+import AppHeader from '../../components/AppHeader';
 
 export default function VehicleRegisterScreen({ route, navigation }: any) {
     const theme = useTheme();
@@ -51,31 +52,11 @@ export default function VehicleRegisterScreen({ route, navigation }: any) {
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-            <Surface
-                elevation={2}
-                style={{
-                    backgroundColor: theme.colors.primary,
-                    paddingTop: 60,
-                    paddingBottom: 8,
-                    paddingHorizontal: 16,
-                    zIndex: 10
-                }}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {/* Back button logic: user might want to skip vehicle registration? 
-              For now keeping it strict or maybe let them go to Login if they cancel */}
-                    <IconButton
-                        icon="arrow-left"
-                        iconColor={theme.colors.onPrimary}
-                        size={24}
-                        onPress={() => navigation.navigate('Login')}
-                        style={{ marginLeft: -12 }}
-                    />
-                    <Text variant="headlineSmall" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
-                        Cadastrar Veículo
-                    </Text>
-                </View>
-            </Surface>
+            <AppHeader
+                title="Cadastrar Veículo"
+                showBackButton
+                onBackPress={() => navigation.navigate('Login')}
+            />
 
             <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 32 }}>
                 <Text variant="bodyLarge" style={{ marginBottom: 24, textAlign: 'center' }}>

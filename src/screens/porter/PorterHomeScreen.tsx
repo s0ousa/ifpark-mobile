@@ -4,6 +4,7 @@ import { Text, useTheme, ActivityIndicator, Button, Surface, IconButton, Divider
 import { useAuthStore } from '../../store/useAuthStore';
 import { ParkingLotService, ParkingLot } from '../../services/ParkingLotService';
 import ParkingLotCard from '../../components/ParkingLotCard';
+import AppHeader from '../../components/AppHeader';
 
 export default function PorterHomeScreen() {
     const theme = useTheme();
@@ -74,32 +75,12 @@ export default function PorterHomeScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-            {/* Header similar ao RegisterScreen */}
-            <Surface
-                elevation={2}
-                style={{
-                    backgroundColor: theme.colors.primary,
-                    paddingTop: 60,
-                    paddingBottom: 8,
-                    paddingHorizontal: 16,
-                    zIndex: 10
-                }}
-            >
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text variant="headlineSmall" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
-                            Portaria
-                        </Text>
-                    </View>
-                    <IconButton
-                        icon="logout"
-                        iconColor={theme.colors.onPrimary}
-                        size={24}
-                        onPress={handleLogout}
-                    />
-                </View>
-            </Surface>
+            <AppHeader
+                title="Portaria"
+                showRightIcon
+                rightIcon="logout"
+                onRightIconPress={handleLogout}
+            />
             <Text variant="titleMedium"
                 style={{
                     paddingHorizontal: 16,
