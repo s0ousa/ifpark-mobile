@@ -6,7 +6,7 @@ import { ParkingLotService, ParkingLot } from '../../services/ParkingLotService'
 import ParkingLotCard from '../../components/ParkingLotCard';
 import AppHeader from '../../components/AppHeader';
 
-export default function PorterHomeScreen() {
+export default function PorterHomeScreen({ navigation }: any) {
     const theme = useTheme();
     const { user, signOut } = useAuthStore();
 
@@ -48,7 +48,12 @@ export default function PorterHomeScreen() {
     };
 
     const renderParkingLot = ({ item }: { item: ParkingLot }) => {
-        return <ParkingLotCard parkingLot={item} />;
+        return (
+            <ParkingLotCard
+                parkingLot={item}
+                onPress={() => navigation.navigate('ParkingLotDetails', { parkingLot: item })}
+            />
+        );
     };
 
     if (loading) {
