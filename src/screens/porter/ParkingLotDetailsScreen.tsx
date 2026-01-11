@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Text, Card, useTheme, Divider, Icon, TextInput, FAB, Portal, Modal, Button } from 'react-native-paper';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, Card, useTheme, Divider, Icon, TextInput, FAB, Portal, Modal, Button, IconButton } from 'react-native-paper';
 import AppHeader from '../../components/AppHeader';
-import { ParkingLot } from '../../services/ParkingLotService';
-
-// Mock data para atividade recente
-const MOCK_ACTIVITIES = [
-    { id: '1', name: 'João Silva Santos', plate: 'ABC-1234', time: '12:30', type: 'exit' },
-    { id: '2', name: 'Carlos Mendes Pereira', plate: 'GHI-3456', time: '09:00', type: 'entry' },
-    { id: '3', name: 'Maria Oliveira Costa', plate: 'DEF-9012', time: '08:30', type: 'entry' },
-    { id: '4', name: 'João Silva Santos', plate: 'ABC-1234', time: '08:15', type: 'entry' },
-];
+import { ParkingLot, ParkingLotService } from '../../services/ParkingLotService';
+import { MovementService, Movement } from '../../services/MovementService';
+import MovementCard from '../../components/MovementCard';
 
 type ParkingLotDetailsScreenProps = {
     route: any;
@@ -19,10 +13,137 @@ type ParkingLotDetailsScreenProps = {
 
 export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLotDetailsScreenProps) {
     const theme = useTheme();
-    const { parkingLot } = route.params as { parkingLot: ParkingLot };
+    const { parkingLot: initialParkingLot } = route.params as { parkingLot: ParkingLot };
+    const [parkingLot, setParkingLot] = useState<ParkingLot>(initialParkingLot);
     const [modalVisible, setModalVisible] = useState(false);
     const [searchPlate, setSearchPlate] = useState('');
+    const [movements, setMovements] = useState<Movement[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
+    useEffect(() => {
+        loadData();
+    }, [parkingLot.id]);
+
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const [parkingLotData, movementsData] = await Promise.all([
+                ParkingLotService.getParkingLotById(parkingLot.id),
+                MovementService.getMovementsByParkingLot(parkingLot.id)
+            ]);
+
+            setParkingLot(parkingLotData);
+            setMovements(movementsData.content);
+        } catch (err: any) {
+            setError(err.message || 'Erro ao carregar dados');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadData();
+        setRefreshing(false);
+    };
+
+    const filteredMovements = movements.filter(movement => {
+        const query = searchQuery.toLowerCase();
+        return (
+            movement.veiculo.placa.toLowerCase().includes(query) ||
+            movement.veiculo.pessoa.nome.toLowerCase().includes(query)
+        );
+    });
+
+
+    const renderListHeader = useMemo(() => (
+        <>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
+                <Card style={{ flex: 1, backgroundColor: theme.colors.success, borderRadius: 12 }} mode="elevated">
+                    <Card.Content style={{ alignItems: 'flex-start', paddingVertical: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Icon source="check-circle-outline" size={30} color="white" />
+                            <Text variant="headlineLarge" style={{ fontWeight: 'bold', color: 'white' }}>
+                                {parkingLot.vagasLivres}
+                            </Text>
+                        </View>
+                        <Text variant="bodyLarge" style={{ color: 'white' }}>
+                            Vagas Livres
+                        </Text>
+                    </Card.Content>
+                </Card>
+
+                <Card style={{ flex: 1, backgroundColor: theme.colors.error, borderRadius: 12 }} mode="elevated">
+                    <Card.Content style={{ alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Icon source="car-outline" size={30} color="white" />
+                            <Text variant="headlineLarge" style={{ fontWeight: 'bold', color: 'white' }}>
+                                {parkingLot.vagasOcupadas}
+                            </Text>
+                        </View>
+                        <Text variant="bodyLarge" style={{ color: 'white' }}>
+                            Vagas Ocupadas
+                        </Text>
+                    </Card.Content>
+                </Card>
+            </View>
+
+            <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 8, color: theme.colors.onBackground }}>
+                Histórico
+            </Text>
+            <View style={{ marginBottom: 16 }}>
+                <TextInput
+                    mode="outlined"
+                    placeholder="Buscar por placa ou nome..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    left={<TextInput.Icon icon="magnify" />}
+                    style={{ backgroundColor: theme.colors.surface }}
+                />
+            </View>
+        </>
+    ), [parkingLot.vagasLivres, parkingLot.vagasOcupadas, searchQuery, theme]);
+
+    const renderEmptyComponent = () => {
+        if (loading) {
+            return (
+                <View style={{ padding: 40, alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <Text style={{ marginTop: 12, color: theme.colors.textSecondary }}>
+                        Carregando histórico...
+                    </Text>
+                </View>
+            );
+        }
+
+        if (error) {
+            return (
+                <View style={{ padding: 40, alignItems: 'center' }}>
+                    <Icon source="alert-circle-outline" size={48} color={theme.colors.error} />
+                    <Text style={{ marginTop: 12, color: theme.colors.error, textAlign: 'center' }}>
+                        {error}
+                    </Text>
+                    <Button mode="outlined" onPress={loadData} style={{ marginTop: 12 }}>
+                        Tentar novamente
+                    </Button>
+                </View>
+            );
+        }
+
+        return (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+                <Icon source="car-off" size={48} color={theme.colors.textSecondary} />
+                <Text style={{ marginTop: 12, color: theme.colors.textSecondary, textAlign: 'center' }}>
+                    {searchQuery ? 'Nenhuma movimentação encontrada' : 'Nenhuma movimentação registrada'}
+                </Text>
+            </View>
+        );
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -32,112 +153,27 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                 onBackPress={() => navigation.goBack()}
             />
 
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
-                {/* Contadores */}
-                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-                    {/* Vagas Livres */}
-                    <Card style={{ flex: 1, backgroundColor: theme.colors.success, borderRadius: 12 }} mode="elevated">
-                        <Card.Content style={{ alignItems: 'flex-start', paddingVertical: 12 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                <Icon source="check-circle-outline" size={30} color="white" />
-                                <Text variant="headlineLarge" style={{ fontWeight: 'bold', color: 'white' }}>
-                                    {parkingLot.vagasLivres}
-                                </Text>
-
-                            </View>
-                            <Text variant="bodyLarge" style={{ color: 'white' }}>
-                                Vagas Livres
-                            </Text>
-                        </Card.Content>
-                    </Card>
-
-                    {/* Vagas Ocupadas */}
-                    <Card style={{ flex: 1, backgroundColor: theme.colors.error, borderRadius: 12 }} mode="elevated">
-                        <Card.Content style={{ alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 12 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                <Icon source="car-outline" size={30} color="white" />
-
-                                <Text variant="headlineLarge" style={{ fontWeight: 'bold', color: 'white' }}>
-                                    {parkingLot.vagasOcupadas}
-                                </Text>
-                            </View>
-                            <Text variant="bodyLarge" style={{ color: 'white' }}>
-                                Vagas Ocupadas
-                            </Text>
-                        </Card.Content>
-                    </Card>
-                </View>
-
-                <View style={{ marginBottom: 16 }}>
-                    <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 12, color: theme.colors.onBackground }}>
-                        Histórico
-                    </Text>
-                    <View style={{ marginBottom: 16 }}>
-                        <TextInput
-                            mode="outlined"
-                            placeholder="Buscar por placa ou nome..."
-                            left={<TextInput.Icon icon="magnify" />}
-                            style={{ backgroundColor: theme.colors.surface }}
-                        />
-                    </View>
+            <FlatList
+                data={filteredMovements}
+                renderItem={({ item, index }) => (
                     <View style={{ backgroundColor: theme.colors.surface, borderRadius: 12, overflow: 'hidden' }}>
-                        {MOCK_ACTIVITIES.map((activity, index) => (
-                            <View key={activity.id}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 }}>
-                                    {/* Ícone */}
-                                    <View style={{
-                                        width: 40,
-                                        height: 40,
-                                        borderRadius: 20,
-                                        backgroundColor: activity.type === 'entry' ? '#E8F5E9' : '#E3F2FD',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: 12
-                                    }}>
-                                        <Icon
-                                            source="car"
-                                            size={20}
-                                            color={activity.type === 'entry' ? theme.colors.success : '#2196F3'}
-                                        />
-                                    </View>
-
-                                    {/* Informações */}
-                                    <View style={{ flex: 1 }}>
-                                        <Text variant="bodyLarge" style={{ fontWeight: '500', color: theme.colors.onSurface }}>
-                                            {activity.name}
-                                        </Text>
-                                        <Text variant="bodySmall" style={{ color: theme.colors.textSecondary }}>
-                                            {activity.plate}
-                                        </Text>
-                                        <Text variant="bodySmall" style={{ color: theme.colors.textTertiary }}>
-                                            {activity.time}
-                                        </Text>
-                                    </View>
-
-                                    {/* Badge */}
-                                    <View style={{
-                                        paddingHorizontal: 12,
-                                        paddingVertical: 6,
-                                        borderRadius: 16,
-                                        backgroundColor: activity.type === 'entry' ? '#E8F5E9' : '#E3F2FD'
-                                    }}>
-                                        <Text style={{
-                                            fontSize: 12,
-                                            fontWeight: 'bold',
-                                            color: activity.type === 'entry' ? theme.colors.success : '#2196F3'
-                                        }}>
-                                            {activity.type === 'entry' ? 'Entrada' : 'Saída'}
-                                        </Text>
-                                    </View>
-                                </View>
-                                {index < MOCK_ACTIVITIES.length - 1 && <Divider />}
-                            </View>
-                        ))}
+                        <MovementCard movement={item} />
+                        {index < filteredMovements.length - 1 && <Divider />}
                     </View>
-                </View>
-            </ScrollView>
+                )}
+                keyExtractor={(item) => item.id}
+                ListHeaderComponent={renderListHeader}
+                ListEmptyComponent={renderEmptyComponent}
+                contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[theme.colors.primary]}
+                    />
+                }
+            />
 
-            {/* FAB para Registrar Acesso */}
             <FAB
                 icon="plus"
                 style={{
@@ -151,7 +187,6 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                 onPress={() => setModalVisible(true)}
             />
 
-            {/* Modal de Registro de Acesso */}
             <Portal>
                 <Modal
                     visible={modalVisible}
@@ -167,16 +202,36 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                         Registrar Acesso
                     </Text>
 
-                    <TextInput
-                        mode="outlined"
-                        label="Placa do Veículo"
-                        placeholder="Ex: ABC-1234"
-                        value={searchPlate}
-                        onChangeText={setSearchPlate}
-                        autoCapitalize="characters"
-                        maxLength={8}
-                        style={{ marginBottom: 20, backgroundColor: theme.colors.surface }}
-                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                        <TextInput
+                            mode="outlined"
+                            label="Placa do Veículo"
+                            placeholder="Ex: ABC-1234"
+                            value={searchPlate}
+                            onChangeText={setSearchPlate}
+                            autoCapitalize="characters"
+                            maxLength={8}
+                            style={{ flex: 1, backgroundColor: theme.colors.surface }}
+                        />
+
+                        <IconButton
+                            icon="barcode-scan"
+                            mode="contained"
+                            containerColor="#e6ebea"
+                            iconColor={theme.colors.primary}
+                            size={24}
+                            onPress={() => {
+                                // TODO: Implementar lógica de abrir câmera
+                            }}
+                            style={{
+                                marginTop: 6,
+                                margin: 0,
+                                width: 56,
+                                height: 56,
+                                borderRadius: 28,
+                            }}
+                        />
+                    </View>
 
                     <View style={{ gap: 12 }}>
                         <Button
@@ -204,6 +259,19 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             }}
                         >
                             Registrar Saída
+                        </Button>
+
+                        <Button
+                            mode="contained"
+                            icon="account-plus"
+                            style={{ backgroundColor: theme.colors.tertiary }}
+                            onPress={() => {
+                                // TODO: Implementar lógica de visitante
+                                setModalVisible(false);
+                                setSearchPlate('');
+                            }}
+                        >
+                            Registrar Visitante
                         </Button>
 
                         <Button
