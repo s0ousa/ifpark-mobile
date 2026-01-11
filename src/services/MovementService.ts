@@ -87,5 +87,65 @@ export const MovementService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    registerEntry: async (placa: string, estacionamentoId: string): Promise<Movement> => {
+        try {
+            const response = await api.post('/movimentacoes/entrada', {
+                placa,
+                estacionamentoId
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                const errorData = error.response.data;
+
+                // Se houver erros de validação de campos
+                if (errorData.errors && Array.isArray(errorData.errors)) {
+                    const errorMessages = errorData.errors
+                        .map((err: any) => err.message)
+                        .join('\n');
+                    throw new Error(errorMessages);
+                }
+
+                // Se houver mensagem de erro geral
+                if (errorData.error) {
+                    throw new Error(errorData.error);
+                }
+
+                throw new Error("Erro ao registrar entrada");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    registerExit: async (placa: string, estacionamentoId: string): Promise<Movement> => {
+        try {
+            const response = await api.post('/movimentacoes/saida', {
+                placa,
+                estacionamentoId
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                const errorData = error.response.data;
+
+                // Se houver erros de validação de campos
+                if (errorData.errors && Array.isArray(errorData.errors)) {
+                    const errorMessages = errorData.errors
+                        .map((err: any) => err.message)
+                        .join('\n');
+                    throw new Error(errorMessages);
+                }
+
+                // Se houver mensagem de erro geral
+                if (errorData.error) {
+                    throw new Error(errorData.error);
+                }
+
+                throw new Error("Erro ao registrar saída");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };

@@ -20,7 +20,9 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
     const [movements, setMovements] = useState<Movement[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [registering, setRegistering] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [modalError, setModalError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -50,6 +52,46 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
         setRefreshing(true);
         await loadData();
         setRefreshing(false);
+    };
+
+    const handleRegisterEntry = async () => {
+        if (!searchPlate.trim()) {
+            setModalError('Por favor, digite a placa do veículo');
+            return;
+        }
+
+        try {
+            setRegistering(true);
+            setModalError(null);
+            await MovementService.registerEntry(searchPlate.toUpperCase(), parkingLot.id);
+            setModalVisible(false);
+            setSearchPlate('');
+            await loadData();
+        } catch (err: any) {
+            setModalError(err.message || 'Erro ao registrar entrada');
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const handleRegisterExit = async () => {
+        if (!searchPlate.trim()) {
+            setModalError('Por favor, digite a placa do veículo');
+            return;
+        }
+
+        try {
+            setRegistering(true);
+            setModalError(null);
+            await MovementService.registerExit(searchPlate.toUpperCase(), parkingLot.id);
+            setModalVisible(false);
+            setSearchPlate('');
+            await loadData();
+        } catch (err: any) {
+            setModalError(err.message || 'Erro ao registrar saída');
+        } finally {
+            setRegistering(false);
+        }
     };
 
     const filteredMovements = movements.filter(movement => {
@@ -198,8 +240,12 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                         borderRadius: 16,
                     }}
                 >
-                    <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 20, color: theme.colors.primary }}>
+                    <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 8, color: theme.colors.primary }}>
                         Registrar Acesso
+                    </Text>
+
+                    <Text variant="bodyMedium" style={{ marginBottom: 16, color: theme.colors.onSurfaceVariant }}>
+                        Digite ou escaneie a placa
                     </Text>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -208,9 +254,14 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             label="Placa do Veículo"
                             placeholder="Ex: ABC-1234"
                             value={searchPlate}
-                            onChangeText={setSearchPlate}
+                            onChangeText={(text) => {
+                                setSearchPlate(text);
+                                setModalError(null);
+                            }}
                             autoCapitalize="characters"
                             maxLength={8}
+                            error={!!modalError}
+                            disabled={registering}
                             style={{ flex: 1, backgroundColor: theme.colors.surface }}
                         />
 
@@ -220,6 +271,7 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             containerColor="#e6ebea"
                             iconColor={theme.colors.primary}
                             size={24}
+                            disabled={registering}
                             onPress={() => {
                                 // TODO: Implementar lógica de abrir câmera
                             }}
@@ -233,16 +285,20 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                         />
                     </View>
 
+                    {modalError && (
+                        <Text variant="bodySmall" style={{ color: theme.colors.error, marginBottom: 12 }}>
+                            {modalError}
+                        </Text>
+                    )}
+
                     <View style={{ gap: 12 }}>
                         <Button
                             mode="contained"
                             icon="login"
+                            loading={registering}
+                            disabled={registering}
                             style={{ backgroundColor: theme.colors.success }}
-                            onPress={() => {
-                                // TODO: Implementar lógica de entrada
-                                setModalVisible(false);
-                                setSearchPlate('');
-                            }}
+                            onPress={handleRegisterEntry}
                         >
                             Registrar Entrada
                         </Button>
@@ -250,20 +306,19 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                         <Button
                             mode="contained"
                             icon="logout"
+                            loading={registering}
+                            disabled={registering}
                             style={{ backgroundColor: '#2196F3' }}
                             contentStyle={{ flexDirection: 'row-reverse' }}
-                            onPress={() => {
-                                // TODO: Implementar lógica de saída
-                                setModalVisible(false);
-                                setSearchPlate('');
-                            }}
+                            onPress={handleRegisterExit}
                         >
                             Registrar Saída
                         </Button>
-
+                        <Divider />
                         <Button
                             mode="contained"
                             icon="account-plus"
+                            disabled={registering}
                             style={{ backgroundColor: theme.colors.tertiary }}
                             onPress={() => {
                                 // TODO: Implementar lógica de visitante
@@ -276,9 +331,11 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
 
                         <Button
                             mode="outlined"
+                            disabled={registering}
                             onPress={() => {
                                 setModalVisible(false);
                                 setSearchPlate('');
+                                setModalError(null);
                             }}
                         >
                             Cancelar
