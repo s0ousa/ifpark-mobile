@@ -321,9 +321,12 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             disabled={registering}
                             style={{ backgroundColor: theme.colors.tertiary }}
                             onPress={() => {
-                                // TODO: Implementar lógica de visitante
                                 setModalVisible(false);
                                 setSearchPlate('');
+                                setModalError(null);
+                                navigation.navigate('VisitorRegistration', {
+                                    parkingLotId: parkingLot.id
+                                });
                             }}
                         >
                             Registrar Visitante
