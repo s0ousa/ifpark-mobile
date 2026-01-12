@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, useTheme, ActivityIndicator, IconButton, Portal, Modal } from 'react-native-paper';
 import AppHeader from '../../components/AppHeader';
 import { VisitorService, VisitorRegistrationData } from '../../services/VisitorService';
 import { ViaCepService } from '../../services/ViaCepService';
@@ -31,6 +31,8 @@ export default function VisitorRegistrationScreen({ route, navigation }: Visitor
     const [loading, setLoading] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPlateConfirm, setShowPlateConfirm] = useState(false);
+    const [scannedPlate, setScannedPlate] = useState('');
 
     // Máscaras
     const maskCPF = (value: string) => {
@@ -331,17 +333,43 @@ export default function VisitorRegistrationScreen({ route, navigation }: Visitor
                     Veículo
                 </Text>
 
-                <TextInput
-                    mode="outlined"
-                    label="Placa *"
-                    value={placa}
-                    onChangeText={(text) => setPlaca(maskPlaca(text))}
-                    maxLength={7}
-                    autoCapitalize="characters"
-                    disabled={loading}
-                    style={{ marginBottom: 12, backgroundColor: theme.colors.surface }}
-                    placeholder="ABC1D23"
-                />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <TextInput
+                        mode="outlined"
+                        label="Placa *"
+                        value={placa}
+                        onChangeText={(text) => setPlaca(maskPlaca(text))}
+                        maxLength={7}
+                        autoCapitalize="characters"
+                        disabled={loading}
+                        style={{ flex: 1, backgroundColor: theme.colors.surface }}
+                        placeholder="ABC1D23"
+                    />
+
+                    <IconButton
+                        icon="barcode-scan"
+                        mode="contained"
+                        containerColor="#e6ebea"
+                        iconColor={theme.colors.primary}
+                        size={24}
+                        disabled={loading}
+                        onPress={() => {
+                            navigation.navigate('CameraScreen', {
+                                onPlateDetected: (detectedPlate: string) => {
+                                    setScannedPlate(detectedPlate);
+                                    setShowPlateConfirm(true);
+                                }
+                            });
+                        }}
+                        style={{
+                            marginTop: 6,
+                            margin: 0,
+                            width: 56,
+                            height: 56,
+                            borderRadius: 28,
+                        }}
+                    />
+                </View>
 
                 <TextInput
                     mode="outlined"
@@ -379,6 +407,85 @@ export default function VisitorRegistrationScreen({ route, navigation }: Visitor
                     Cancelar
                 </Button>
             </ScrollView>
+
+            {/* Modal de Confirmação da Placa Escaneada */}
+            <Portal>
+                <Modal
+                    visible={showPlateConfirm}
+                    onDismiss={() => setShowPlateConfirm(false)}
+                    contentContainerStyle={{
+                        backgroundColor: theme.colors.surface,
+                        padding: 24,
+                        margin: 20,
+                        borderRadius: 16,
+                    }}
+                >
+                    <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 8, color: theme.colors.onBackground, textAlign: 'center' }}>
+                        Placa Detectada
+                    </Text>
+
+                    <View style={{
+                        borderRadius: 12,
+                        padding: 20,
+                        marginVertical: 20,
+                        borderWidth: 2,
+                        borderColor: theme.colors.secondary,
+                    }}>
+                        <Text style={{
+                            fontSize: 32,
+                            fontWeight: 'bold',
+                            letterSpacing: 4,
+                            textAlign: 'center',
+                            color: theme.colors.onSurface,
+                        }}>
+                            {scannedPlate}
+                        </Text>
+                    </View>
+
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                        A placa está correta?
+                    </Text>
+
+                    <View style={{ gap: 12 }}>
+                        <Button
+                            mode="contained"
+                            icon="check"
+                            style={{ backgroundColor: theme.colors.success }}
+                            onPress={() => {
+                                setPlaca(maskPlaca(scannedPlate));
+                                setShowPlateConfirm(false);
+                            }}
+                        >
+                            Confirmar
+                        </Button>
+
+                        <Button
+                            mode="contained"
+                            icon="refresh"
+                            style={{ backgroundColor: '#FF9800' }}
+                            onPress={() => {
+                                setShowPlateConfirm(false);
+                                navigation.navigate('CameraScreen', {
+                                    onPlateDetected: (detectedPlate: string) => {
+                                        setScannedPlate(detectedPlate);
+                                        setShowPlateConfirm(true);
+                                    }
+                                });
+                            }}
+                        >
+                            Tentar Novamente
+                        </Button>
+
+                        <Button
+                            mode="outlined"
+                            icon="close"
+                            onPress={() => setShowPlateConfirm(false)}
+                        >
+                            Cancelar
+                        </Button>
+                    </View>
+                </Modal>
+            </Portal>
         </View>
     );
 }

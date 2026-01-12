@@ -2,7 +2,8 @@
   "extends": "@react-native/typescript-config/tsconfig.json",
   "include": [
     "src/**/*",
-    "src/theme/theme.d.ts"
+    "src/theme/theme.d.ts",
+    "env.d.ts"
   ],
   "exclude": [
     "**/node_modules",

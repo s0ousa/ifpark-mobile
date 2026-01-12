@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ParkingLotService, ParkingLot } from '../../services/ParkingLotService';
 import ParkingLotCard from '../../components/ParkingLotCard';
 import AppHeader from '../../components/AppHeader';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function PorterHomeScreen({ navigation }: any) {
     const theme = useTheme();
@@ -34,9 +35,12 @@ export default function PorterHomeScreen({ navigation }: any) {
         }
     };
 
-    useEffect(() => {
-        fetchParkingLots();
-    }, [user?.campusId]);
+    // Recarregar dados toda vez que a tela ganhar foco
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchParkingLots();
+        }, [user?.campusId])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);

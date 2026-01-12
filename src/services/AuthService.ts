@@ -22,6 +22,7 @@ export const AuthService = {
         const errorMessage = error.response.data.message || error.response.data.error || "Erro ao fazer login";
         throw new Error(errorMessage);
       }
+      console.log(error);
       throw new Error("Erro de conexão com o servidor de login");
     }
   }

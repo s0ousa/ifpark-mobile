@@ -24,6 +24,8 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
     const [error, setError] = useState<string | null>(null);
     const [modalError, setModalError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showPlateConfirm, setShowPlateConfirm] = useState(false);
+    const [scannedPlate, setScannedPlate] = useState('');
 
     useEffect(() => {
         loadData();
@@ -222,11 +224,13 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                     position: 'absolute',
                     margin: 16,
                     right: 0,
-                    bottom: 0,
+                    bottom: 36,
+                    borderRadius: 50,
                     backgroundColor: theme.colors.secondary,
                 }}
                 color="white"
                 onPress={() => setModalVisible(true)}
+                customSize={72}
             />
 
             <Portal>
@@ -273,7 +277,13 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             size={24}
                             disabled={registering}
                             onPress={() => {
-                                // TODO: Implementar lógica de abrir câmera
+                                setModalVisible(false);
+                                navigation.navigate('CameraScreen', {
+                                    onPlateDetected: (plate: string) => {
+                                        setScannedPlate(plate);
+                                        setShowPlateConfirm(true);
+                                    }
+                                });
                             }}
                             style={{
                                 marginTop: 6,
@@ -339,6 +349,88 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                                 setModalVisible(false);
                                 setSearchPlate('');
                                 setModalError(null);
+                            }}
+                        >
+                            Cancelar
+                        </Button>
+                    </View>
+                </Modal>
+
+                {/* Modal de Confirmação da Placa Escaneada */}
+                <Modal
+                    visible={showPlateConfirm}
+                    onDismiss={() => setShowPlateConfirm(false)}
+                    contentContainerStyle={{
+                        backgroundColor: theme.colors.surface,
+                        padding: 24,
+                        margin: 20,
+                        borderRadius: 16,
+                    }}
+                >
+                    <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 8, color: theme.colors.onBackground, textAlign: 'center' }}>
+                        Placa Detectada
+                    </Text>
+
+                    <View style={{
+                        backgroundColor: theme.colors.background,
+                        borderRadius: 12,
+                        padding: 20,
+                        marginVertical: 20,
+                        borderWidth: 2,
+                        borderColor: theme.colors.secondary,
+                    }}>
+                        <Text style={{
+                            fontSize: 32,
+                            fontWeight: 'bold',
+                            letterSpacing: 4,
+                            textAlign: 'center',
+                            color: theme.colors.onSurface,
+                        }}>
+                            {scannedPlate}
+                        </Text>
+                    </View>
+
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                        A placa está correta?
+                    </Text>
+
+                    <View style={{ gap: 12 }}>
+                        <Button
+                            mode="contained"
+                            icon="check"
+                            style={{ backgroundColor: theme.colors.success }}
+                            onPress={() => {
+                                setSearchPlate(scannedPlate);
+                                setShowPlateConfirm(false);
+                                setModalVisible(true);
+                            }}
+                        >
+                            Confirmar
+                        </Button>
+
+                        <Button
+                            mode="contained"
+                            icon="refresh"
+                            style={{ backgroundColor: '#FF9800' }}
+                            onPress={() => {
+                                setShowPlateConfirm(false);
+                                navigation.navigate('CameraScreen', {
+                                    onPlateDetected: (plate: string) => {
+                                        setScannedPlate(plate);
+                                        setShowPlateConfirm(true);
+                                    }
+                                });
+                            }}
+                        >
+                            Tentar Novamente
+                        </Button>
+
+                        <Button
+                            mode="outlined"
+                            icon="close"
+                            onPress={() => {
+                                setShowPlateConfirm(false);
+                                setModalVisible(true);
                             }}
                         >
                             Cancelar
