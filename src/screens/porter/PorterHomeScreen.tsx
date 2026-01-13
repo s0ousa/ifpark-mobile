@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function PorterHomeScreen({ navigation }: any) {
     const theme = useTheme();
-    const { user, signOut } = useAuthStore();
+    const { user } = useAuthStore();
 
     const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,10 +47,6 @@ export default function PorterHomeScreen({ navigation }: any) {
         fetchParkingLots();
     };
 
-    const handleLogout = async () => {
-        await signOut();
-    };
-
     const renderParkingLot = ({ item }: { item: ParkingLot }) => {
         return (
             <ParkingLotCard
@@ -84,12 +80,7 @@ export default function PorterHomeScreen({ navigation }: any) {
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-            <AppHeader
-                title="Portaria"
-                showRightIcon
-                rightIcon="logout"
-                onRightIconPress={handleLogout}
-            />
+            <AppHeader title="Portaria" />
             <Text variant="titleMedium"
                 style={{
                     paddingHorizontal: 16,
@@ -116,7 +107,7 @@ export default function PorterHomeScreen({ navigation }: any) {
                 }
                 ListEmptyComponent={
                     <View style={{ padding: 48, alignItems: 'center' }}>
-                        <Text variant="bodyLarge" style={{ color: theme.colors.textSecondary }}>
+                        <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
                             Nenhum estacionamento encontrado
                         </Text>
                     </View>
