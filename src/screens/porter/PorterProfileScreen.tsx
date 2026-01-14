@@ -136,6 +136,16 @@ export default function PorterProfileScreen() {
         return roles[papel] || papel;
     };
 
+    const getRoleIcon = (papel: string) => {
+        const icons: Record<string, string> = {
+            'ROLE_COMUM': 'car',
+            'ROLE_VIGIA': 'shield-account',
+            'ROLE_ADMIN': 'security',
+            'ROLE_SUPER_ADMIN': 'security',
+        };
+        return icons[papel] || 'account';
+    };
+
     const getInitials = (nome: string) => {
         const names = nome.split(' ');
         if (names.length >= 2) {
@@ -286,7 +296,7 @@ export default function PorterProfileScreen() {
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
                         <View style={{ width: 40, alignItems: 'center' }}>
-                            <Icon name="shield-account" size={24} color={theme.colors.primary} />
+                            <Icon name={getRoleIcon(profileData.papel)} size={24} color={theme.colors.primary} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{getRoleLabel(profileData.papel)}</Text>
