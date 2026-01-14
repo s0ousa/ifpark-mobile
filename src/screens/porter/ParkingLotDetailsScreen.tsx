@@ -230,7 +230,7 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                 }}
                 color="white"
                 onPress={() => setModalVisible(true)}
-                customSize={72}
+                customSize={64}
             />
 
             <Portal>

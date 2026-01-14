@@ -27,16 +27,24 @@ export function AppNavigator() {
         return <AuthStack />;
     }
 
+    console.log('User papel:', user.papel);
+    console.log('User object:', JSON.stringify(user, null, 2));
+
     switch (user.papel) {
         case 'ROLE_VIGIA':
+            console.log('Navigating to PorterNavigator');
             return <PorterNavigator />;
         case 'ROLE_ADMIN':
+            console.log('Navigating to AdminNavigator');
             return <AdminNavigator />;
         case 'ROLE_SUPER_ADMIN':
+            console.log('Navigating to SuperAdminNavigator');
             return <SuperAdminNavigator />;
         case 'ROLE_COMUM':
+            console.log('Navigating to DriverNavigator');
             return <DriverNavigator />;
         default:
+            console.log('Navigating to DriverNavigator (default)');
             return <DriverNavigator />;
     }
 }

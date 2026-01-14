@@ -6,6 +6,12 @@ export type Pessoa = {
     tipo: 'ALUNO' | 'SERVIDOR' | 'VISITANTE';
     status: 'ATIVO' | 'INATIVO';
     telefone: string;
+    veiculos?: Array<{
+        id: string;
+        placa: string;
+        modelo: string;
+        statusAprovacao: 'APROVADO' | 'PENDENTE' | 'REJEITADO';
+    }>;
 };
 
 export type Campus = {

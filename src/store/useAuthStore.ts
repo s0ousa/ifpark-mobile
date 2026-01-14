@@ -8,6 +8,7 @@ type User = {
     email: string;
     papel: 'ROLE_COMUM' | 'ROLE_VIGIA' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN' | string;
     campusId?: string;
+    pessoaId?: string;
     pessoa?: {
         nome: string;
     };
@@ -67,6 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 id: response.id,
                 email: response.email,
                 papel: response.role,
+                pessoaId: response.pessoaId,
                 campusId: userDetails.campus?.id,
                 pessoa: userDetails.pessoa ? {
                     nome: userDetails.pessoa.nome
