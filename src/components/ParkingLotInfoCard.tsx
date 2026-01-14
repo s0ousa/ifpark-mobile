@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { ParkingLot } from '../services/ParkingLotService';
@@ -10,8 +10,13 @@ type ParkingLotInfoCardProps = {
 export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardProps) {
     const theme = useTheme();
 
-    const percentageOccupied = (parkingLot.vagasOcupadas / parkingLot.capacidadeTotal) * 100;
-    const percentageAvailable = 100 - percentageOccupied;
+    const occupancyRate = (parkingLot.vagasOcupadas / parkingLot.capacidadeTotal) * 100;
+
+    const statusColor = useMemo(() => {
+        if (occupancyRate >= 80) return theme.colors.error;
+        if (occupancyRate >= 60) return '#FB8C00'; // Orange
+        return theme.colors.success || '#4CAF50'; // Green
+    }, [occupancyRate, theme]);
 
     return (
         <View
@@ -38,7 +43,7 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
                         width: 12,
                         height: 12,
                         borderRadius: 6,
-                        backgroundColor: parkingLot.vagasLivres > 0 ? theme.colors.tertiary : theme.colors.error,
+                        backgroundColor: statusColor,
                     }}
                 />
             </View>
@@ -48,12 +53,12 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
                 <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                     Disponíveis
                 </Text>
-                <Text variant="headlineMedium" style={{ color: theme.colors.tertiary }}>
+                <Text variant="headlineMedium" style={{ color: statusColor }}>
                     {parkingLot.vagasLivres}
                 </Text>
             </View>
 
-            {/* Progress bar */}
+            {/* Progress bar - represents OCCUPANCY */}
             <View style={{ marginBottom: 4 }}>
                 <View
                     style={{
@@ -66,8 +71,8 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
                     <View
                         style={{
                             height: '100%',
-                            width: `${percentageAvailable}%`,
-                            backgroundColor: theme.colors.tertiary,
+                            width: `${Math.min(occupancyRate, 100)}%`,
+                            backgroundColor: statusColor,
                             borderRadius: 4,
                         }}
                     />
@@ -77,10 +82,10 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
             {/* Capacity label */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                    0
+                    Ocupadas: {parkingLot.vagasOcupadas}
                 </Text>
                 <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {parkingLot.capacidadeTotal} vagas
+                    Capacidade: {parkingLot.capacidadeTotal}
                 </Text>
             </View>
         </View>

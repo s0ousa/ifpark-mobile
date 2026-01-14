@@ -147,5 +147,17 @@ export const MovementService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    getMovementsByUser: async (userId: string, page: number = 0, size: number = 20): Promise<MovementResponse> => {
+        try {
+            const response = await api.get(`/movimentacoes/usuario/${userId}?page=${page}&size=${size}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao buscar histórico de movimentações");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };
