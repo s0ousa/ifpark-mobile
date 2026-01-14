@@ -23,6 +23,7 @@ export const theme = {
     // FUNDOS NEUTROS
     background: '#FAFAFA',
     surface: '#FAFAFA',
+    surfaceVariant: '#F5F5F5',
 
     // Inputs (Outline)
     outline: '#E0E0E0',
@@ -33,5 +34,14 @@ export const theme = {
     textSecondary: '#666', // Texto secundário
     textTertiary: '#999', // Texto terciário
     divider: '#E0E0E0', // Divisores
+  },
+  // Customização de elevação
+  elevation: {
+    level0: 0,
+    level1: 1,
+    level2: 2,
+    level3: 4,
+    level4: 6,
+    level5: 8,
   },
 };

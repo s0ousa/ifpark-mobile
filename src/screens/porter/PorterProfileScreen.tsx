@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, useTheme, Button, TextInput, ActivityIndicator, Avatar, Divider, Portal, Modal } from 'react-native-paper';
+import { View, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { Text, useTheme, Button, TextInput, ActivityIndicator, Avatar, Portal, Modal, Snackbar, Divider } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { UserService } from '../../services/UserService';
 import { UserProfile } from '../../types/User';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PorterProfileScreen() {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
     const { user, signOut } = useAuthStore();
 
     const [profileData, setProfileData] = useState<UserProfile | null>(null);
@@ -19,6 +21,11 @@ export default function PorterProfileScreen() {
     // Modal states
     const [phoneModalVisible, setPhoneModalVisible] = useState(false);
     const [addressModalVisible, setAddressModalVisible] = useState(false);
+
+    // Snackbar states
+    const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
     // Editable fields
     const [telefone, setTelefone] = useState('');
@@ -62,44 +69,54 @@ export default function PorterProfileScreen() {
     );
 
     const handleSavePhone = async () => {
-        if (!user?.id) return;
+        if (!profileData?.pessoa.id) return;
 
         try {
             setSaving(true);
             setError(null);
 
-            await UserService.updateUser(user.id, { telefone });
+            await UserService.updatePhone(profileData.pessoa.id, telefone);
             await fetchUserData();
             setPhoneModalVisible(false);
+
+            setSnackbarMessage('Telefone atualizado com sucesso!');
+            setSnackbarType('success');
+            setSnackbarVisible(true);
         } catch (err: any) {
-            setError(err.message || 'Erro ao salvar telefone');
+            setSnackbarMessage(err.message || 'Erro ao salvar telefone');
+            setSnackbarType('error');
+            setSnackbarVisible(true);
         } finally {
             setSaving(false);
         }
     };
 
     const handleSaveAddress = async () => {
-        if (!user?.id) return;
+        if (!profileData?.endereco?.id) return;
 
         try {
             setSaving(true);
             setError(null);
 
-            await UserService.updateUser(user.id, {
-                endereco: {
-                    logradouro,
-                    numero,
-                    complemento: complemento || null,
-                    bairro,
-                    cidade,
-                    estado,
-                    cep,
-                },
+            await UserService.updateAddress(profileData.endereco.id, {
+                logradouro,
+                numero,
+                complemento: complemento || null,
+                bairro,
+                cidade,
+                estado,
+                cep,
             });
             await fetchUserData();
             setAddressModalVisible(false);
+
+            setSnackbarMessage('Endereço atualizado com sucesso!');
+            setSnackbarType('success');
+            setSnackbarVisible(true);
         } catch (err: any) {
-            setError(err.message || 'Erro ao salvar endereço');
+            setSnackbarMessage(err.message || 'Erro ao salvar endereço');
+            setSnackbarType('error');
+            setSnackbarVisible(true);
         } finally {
             setSaving(false);
         }
@@ -129,8 +146,8 @@ export default function PorterProfileScreen() {
 
     if (loading) {
         return (
-            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={styles.loadingContainer}>
+            <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                     <Text style={{ marginTop: 16, color: theme.colors.onSurfaceVariant }}>Carregando perfil...</Text>
                 </View>
@@ -140,8 +157,8 @@ export default function PorterProfileScreen() {
 
     if (!profileData) {
         return (
-            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={styles.loadingContainer}>
+            <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                     <Icon name="alert-circle-outline" size={64} color={theme.colors.error} />
                     <Text variant="titleMedium" style={{ color: theme.colors.error, marginTop: 16, marginBottom: 16 }}>
                         {error || 'Erro ao carregar perfil'}
@@ -155,140 +172,147 @@ export default function PorterProfileScreen() {
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-                {/* Profile Header - Centered */}
-                <View style={styles.profileHeader}>
+        <View style={{
+            flex: 1,
+            backgroundColor: theme.colors.background,
+            paddingTop: insets.top
+        }}
+        >
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
+                <StatusBar
+                    barStyle={theme.dark ? "light-content" : "dark-content"}
+                    backgroundColor={`${theme.colors.primary}20`}
+                    translucent={true}
+                />
+                <View style={{ alignItems: 'center', paddingVertical: 32, paddingHorizontal: 16, }}>
                     <Avatar.Text
                         size={100}
                         label={getInitials(profileData.pessoa.nome)}
                         style={{ backgroundColor: theme.colors.primary }}
                         labelStyle={{ color: '#FFFFFF', fontSize: 40, fontWeight: 'bold' }}
                     />
-                    <Text variant="headlineSmall" style={styles.userName}>
+                    <Text variant="headlineSmall" style={{ marginTop: 16, fontWeight: 'bold', textAlign: 'center' }}>
                         {profileData.pessoa.nome}
                     </Text>
-                    <Text variant="bodyMedium" style={styles.userEmail}>
+                    <Text variant="bodyMedium" style={{ marginTop: 4, color: '#666', textAlign: 'center' }}>
                         {profileData.email}
                     </Text>
                 </View>
 
                 {/* Dados Pessoais */}
-                <View style={styles.section}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>
+                <View >
+                    <Text variant="titleMedium" style={{ paddingHorizontal: 16, paddingVertical: 12, fontWeight: 'bold', fontSize: 16 }}>
                         Dados pessoais
                     </Text>
 
-                    <View style={styles.listItem}>
-                        <View style={styles.listItemIcon}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="account" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{profileData.pessoa.nome}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Nome completo</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.pessoa.nome}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Nome completo</Text>
                         </View>
                     </View>
 
-
-
-                    <View style={styles.listItem}>
-                        <View style={styles.listItemIcon}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="card-account-details" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{profileData.pessoa.cpf}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Número do CPF</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.pessoa.cpf}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Número do CPF</Text>
                         </View>
                     </View>
 
                     {profileData.pessoa.matricula && (
-                        <>
-
-                            <View style={styles.listItem}>
-                                <View style={styles.listItemIcon}>
-                                    <Icon name="badge-account" size={24} color={theme.colors.primary} />
-                                </View>
-                                <View style={styles.listItemContent}>
-                                    <Text variant="bodyLarge" style={styles.listItemTitle}>{profileData.pessoa.matricula}</Text>
-                                    <Text variant="bodySmall" style={styles.listItemSubtitle}>Matrícula</Text>
-                                </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                            <View style={{ width: 40, alignItems: 'center' }}>
+                                <Icon name="badge-account" size={24} color={theme.colors.primary} />
                             </View>
-                        </>
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.pessoa.matricula}</Text>
+                                <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Matrícula</Text>
+                            </View>
+                        </View>
                     )}
 
-
-
-                    <TouchableOpacity style={styles.listItem} onPress={() => setAddressModalVisible(true)}>
-                        <View style={styles.listItemIcon}>
+                    <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}
+                        onPress={() => setAddressModalVisible(true)}
+                    >
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="map-marker" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>
                                 {logradouro ? `${logradouro}, ${numero}${complemento ? ', ' + complemento : ''}` : 'Não informado'}
                             </Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Endereço</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Endereço</Text>
                         </View>
                         <Icon name="pencil" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.listItem} onPress={() => setPhoneModalVisible(true)}>
-                        <View style={styles.listItemIcon}>
+
+                    <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}
+                        onPress={() => setPhoneModalVisible(true)}
+                    >
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="phone" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{telefone || 'Não informado'}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Telefone</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{telefone || 'Não informado'}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Telefone</Text>
                         </View>
                         <Icon name="pencil" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Dados da conta */}
-                <View style={styles.section}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>
+                <View >
+                    <Text variant="titleMedium" style={{ paddingHorizontal: 16, paddingVertical: 12, fontWeight: 'bold', fontSize: 16 }}>
                         Dados da conta
                     </Text>
 
-                    <View style={styles.listItem}>
-                        <View style={styles.listItemIcon}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="email" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{profileData.email}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>E-mail</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.email}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>E-mail</Text>
                         </View>
                     </View>
 
-                    <View style={styles.listItem}>
-                        <View style={styles.listItemIcon}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="shield-account" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{getRoleLabel(profileData.papel)}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Papel no sistema</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{getRoleLabel(profileData.papel)}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Papel no sistema</Text>
                         </View>
                     </View>
 
-
-
-                    <View style={styles.listItem}>
-                        <View style={styles.listItemIcon}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
+                        <View style={{ width: 40, alignItems: 'center' }}>
                             <Icon name="domain" size={24} color={theme.colors.primary} />
                         </View>
-                        <View style={styles.listItemContent}>
-                            <Text variant="bodyLarge" style={styles.listItemTitle}>{profileData.campus.nome}</Text>
-                            <Text variant="bodySmall" style={styles.listItemSubtitle}>Campus</Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.campus.nome}</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Campus</Text>
                         </View>
                     </View>
                 </View>
 
                 {/* Logout Button */}
-                <View style={styles.buttonContainer}>
+                <View style={{ alignSelf: 'center', marginTop: 32, }}>
                     <Button
-                        mode="outlined"
+                        mode="contained"
                         onPress={handleLogout}
                         icon="logout"
-                        textColor={theme.colors.error}
-                        style={styles.logoutButton}
+                        textColor={theme.colors.onError}
+                        style={{ backgroundColor: theme.colors.error }}
                     >
                         Sair
                     </Button>
@@ -300,7 +324,7 @@ export default function PorterProfileScreen() {
                 <Modal
                     visible={phoneModalVisible}
                     onDismiss={() => setPhoneModalVisible(false)}
-                    contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.background }]}
+                    contentContainerStyle={{ margin: 20, padding: 20, borderRadius: 8, maxHeight: '80%', backgroundColor: theme.colors.background }}
                 >
                     <Text variant="titleLarge" style={{ marginBottom: 16, fontWeight: 'bold' }}>
                         Editar Telefone
@@ -315,7 +339,7 @@ export default function PorterProfileScreen() {
                         activeOutlineColor={theme.colors.primary}
                         style={{ marginBottom: 16 }}
                     />
-                    <View style={styles.modalButtons}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                         <Button
                             mode="text"
                             onPress={() => setPhoneModalVisible(false)}
@@ -341,7 +365,7 @@ export default function PorterProfileScreen() {
                 <Modal
                     visible={addressModalVisible}
                     onDismiss={() => setAddressModalVisible(false)}
-                    contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.background }]}
+                    contentContainerStyle={{ margin: 20, padding: 20, borderRadius: 8, maxHeight: '80%', backgroundColor: theme.colors.background }}
                 >
                     <ScrollView>
                         <Text variant="titleLarge" style={{ marginBottom: 16, fontWeight: 'bold' }}>
@@ -355,7 +379,7 @@ export default function PorterProfileScreen() {
                             mode="outlined"
                             keyboardType="numeric"
                             activeOutlineColor={theme.colors.primary}
-                            style={styles.input}
+                            style={{ marginBottom: 12 }}
                         />
 
                         <TextInput
@@ -364,10 +388,10 @@ export default function PorterProfileScreen() {
                             onChangeText={setLogradouro}
                             mode="outlined"
                             activeOutlineColor={theme.colors.primary}
-                            style={styles.input}
+                            style={{ marginBottom: 12 }}
                         />
 
-                        <View style={styles.row}>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
                             <TextInput
                                 label="Número"
                                 value={numero}
@@ -375,7 +399,7 @@ export default function PorterProfileScreen() {
                                 mode="outlined"
                                 keyboardType="numeric"
                                 activeOutlineColor={theme.colors.primary}
-                                style={[styles.input, styles.inputSmall]}
+                                style={{ marginBottom: 12, flex: 1 }}
                             />
 
                             <TextInput
@@ -384,7 +408,7 @@ export default function PorterProfileScreen() {
                                 onChangeText={setComplemento}
                                 mode="outlined"
                                 activeOutlineColor={theme.colors.primary}
-                                style={[styles.input, styles.inputLarge]}
+                                style={{ marginBottom: 12, flex: 2 }}
                             />
                         </View>
 
@@ -394,17 +418,17 @@ export default function PorterProfileScreen() {
                             onChangeText={setBairro}
                             mode="outlined"
                             activeOutlineColor={theme.colors.primary}
-                            style={styles.input}
+                            style={{ marginBottom: 12 }}
                         />
 
-                        <View style={styles.row}>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
                             <TextInput
                                 label="Cidade"
                                 value={cidade}
                                 onChangeText={setCidade}
                                 mode="outlined"
                                 activeOutlineColor={theme.colors.primary}
-                                style={[styles.input, styles.inputLarge]}
+                                style={{ marginBottom: 12, flex: 2 }}
                             />
 
                             <TextInput
@@ -414,11 +438,11 @@ export default function PorterProfileScreen() {
                                 mode="outlined"
                                 maxLength={2}
                                 activeOutlineColor={theme.colors.primary}
-                                style={[styles.input, styles.inputSmall]}
+                                style={{ marginBottom: 12, flex: 1 }}
                             />
                         </View>
 
-                        <View style={styles.modalButtons}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                             <Button
                                 mode="text"
                                 onPress={() => setAddressModalVisible(false)}
@@ -439,104 +463,23 @@ export default function PorterProfileScreen() {
                     </ScrollView>
                 </Modal>
             </Portal>
+
+            {/* Snackbar for feedback */}
+            <Snackbar
+                visible={snackbarVisible}
+                onDismiss={() => setSnackbarVisible(false)}
+                duration={3000}
+                style={{
+                    backgroundColor: snackbarType === 'success' ? theme.colors.tertiary : theme.colors.error
+                }}
+                action={{
+                    label: 'OK',
+                    onPress: () => setSnackbarVisible(false),
+                    textColor: '#FFFFFF',
+                }}
+            >
+                <Text style={{ color: '#FFFFFF' }}>{snackbarMessage}</Text>
+            </Snackbar>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingBottom: 32,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-    },
-    profileHeader: {
-        alignItems: 'center',
-        paddingVertical: 32,
-        paddingHorizontal: 16,
-    },
-    userName: {
-        marginTop: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    userEmail: {
-        marginTop: 4,
-        color: '#666',
-        textAlign: 'center',
-    },
-    section: {
-        marginTop: 24,
-        backgroundColor: '#FFFFFF',
-    },
-    sectionTitle: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    listItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-        backgroundColor: '#FFFFFF',
-    },
-    listItemIcon: {
-        width: 40,
-        alignItems: 'center',
-    },
-    listItemContent: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    listItemTitle: {
-        fontWeight: '500',
-        marginBottom: 2,
-    },
-    listItemSubtitle: {
-        color: '#666',
-        fontSize: 12,
-    },
-    buttonContainer: {
-        paddingHorizontal: 16,
-        marginTop: 32,
-    },
-    logoutButton: {
-        borderColor: '#FF5252',
-    },
-    modal: {
-        margin: 20,
-        padding: 20,
-        borderRadius: 8,
-        maxHeight: '80%',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 8,
-        marginTop: 8,
-    },
-    input: {
-        marginBottom: 12,
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    inputSmall: {
-        flex: 1,
-    },
-    inputLarge: {
-        flex: 2,
-    },
-});

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, Card, useTheme, Divider, Icon, TextInput, FAB, Portal, Modal, Button, IconButton } from 'react-native-paper';
+import { Text, Card, useTheme, Divider, Icon, Searchbar, FAB, Portal, Modal, Button, IconButton, TextInput } from 'react-native-paper';
 import AppHeader from '../../components/AppHeader';
 import { ParkingLot, ParkingLotService } from '../../services/ParkingLotService';
 import { MovementService, Movement } from '../../services/MovementService';
@@ -141,13 +141,13 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                 Histórico
             </Text>
             <View style={{ marginBottom: 16 }}>
-                <TextInput
-                    mode="outlined"
+                <Searchbar
                     placeholder="Buscar por placa ou nome..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    left={<TextInput.Icon icon="magnify" />}
-                    style={{ backgroundColor: theme.colors.surface }}
+                    style={{ backgroundColor: '#F5F5F5' }}
+                    iconColor={theme.colors.primary}
+                    inputStyle={{ color: theme.colors.onSurface }}
                 />
             </View>
         </>
