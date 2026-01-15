@@ -60,5 +60,17 @@ export const UserService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    getAllUsers: async (page: number = 0, size: number = 10) => {
+        try {
+            const response = await api.get(`/usuarios?page=${page}&size=${size}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao buscar usuários");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };

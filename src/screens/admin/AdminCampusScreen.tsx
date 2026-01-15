@@ -10,6 +10,7 @@ import { ParkingLotService, ParkingLot } from '../../services/ParkingLotService'
 import { CampusService, Campus } from '../../services/CampusService';
 import ParkingLotInfoCard from '../../components/ParkingLotInfoCard';
 import CampusInfoCard from '../../components/CampusInfoCard';
+import { theme } from '../../theme';
 
 export default function AdminCampusScreen({ navigation }: any) {
     const theme = useTheme();
@@ -239,7 +240,15 @@ export default function AdminCampusScreen({ navigation }: any) {
             {/* FAB to create new parking lot */}
             <FAB
                 icon="plus"
-                style={styles.fab}
+                customSize={64}
+                style={{
+                    position: 'absolute',
+                    margin: 16,
+                    right: 0,
+                    bottom: 36,
+                    borderRadius: 50,
+                    backgroundColor: theme.colors.secondary,
+                }}
                 color="#FFFFFF"
                 onPress={() => setCreateParkingLotModalVisible(true)}
             />
@@ -532,14 +541,6 @@ const styles = StyleSheet.create({
     emptyStateText: {
         color: '#666',
         marginTop: 12,
-    },
-    fab: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 36,
-        backgroundColor: '#075E54',
-        borderRadius: 50,
     },
     modal: {
         backgroundColor: '#FFFFFF',
