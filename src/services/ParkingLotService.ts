@@ -43,6 +43,37 @@ export const ParkingLotService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    createParkingLot: async (data: {
+        nome: string;
+        campusId: string;
+        capacidadeTotal: number;
+    }): Promise<ParkingLot> => {
+        try {
+            const response = await api.post('/estacionamentos', data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao criar estacionamento");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    updateParkingLot: async (parkingLotId: string, data: {
+        nome: string;
+        capacidadeTotal: number;
+    }): Promise<ParkingLot> => {
+        try {
+            const response = await api.put(`/estacionamentos/${parkingLotId}`, data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao atualizar estacionamento");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };
 

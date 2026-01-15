@@ -5,6 +5,7 @@ import AppHeader from '../../components/AppHeader';
 import { ParkingLot, ParkingLotService } from '../../services/ParkingLotService';
 import { MovementService, Movement } from '../../services/MovementService';
 import MovementCard from '../../components/MovementCard';
+import { useAuthStore } from '../../store/useAuthStore';
 
 type ParkingLotDetailsScreenProps = {
     route: any;
@@ -26,6 +27,19 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
     const [searchQuery, setSearchQuery] = useState('');
     const [showPlateConfirm, setShowPlateConfirm] = useState(false);
     const [scannedPlate, setScannedPlate] = useState('');
+
+    // Edit modal states (for admin)
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editCapacity, setEditCapacity] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const { user } = useAuthStore();
+    const isAdmin = (user as any)?.papel === 'ROLE_ADMIN';
+
+    console.log('ParkingLotDetailsScreen - User:', user);
+    console.log('ParkingLotDetailsScreen - Papel:', (user as any)?.papel);
+    console.log('ParkingLotDetailsScreen - isAdmin:', isAdmin);
 
     useEffect(() => {
         loadData();
@@ -93,6 +107,34 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
             setModalError(err.message || 'Erro ao registrar saída');
         } finally {
             setRegistering(false);
+        }
+    };
+
+    const handleUpdateParkingLot = async () => {
+        if (!editName.trim() || !editCapacity.trim()) return;
+
+        const capacity = parseInt(editCapacity);
+        if (isNaN(capacity) || capacity <= 0) {
+            setModalError('Capacidade deve ser um número maior que zero');
+            return;
+        }
+
+        setSaving(true);
+        setModalError(null);
+        try {
+            const updatedLot = await ParkingLotService.updateParkingLot(parkingLot.id, {
+                nome: editName,
+                capacidadeTotal: capacity
+            });
+            setParkingLot(updatedLot);
+            setEditModalVisible(false);
+            setEditName('');
+            setEditCapacity('');
+            await loadData();
+        } catch (err: any) {
+            setModalError(err.message || 'Erro ao atualizar estacionamento');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -219,7 +261,7 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
             />
 
             <FAB
-                icon="plus"
+                icon={isAdmin ? "pencil" : "plus"}
                 style={{
                     position: 'absolute',
                     margin: 16,
@@ -229,7 +271,15 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                     backgroundColor: theme.colors.secondary,
                 }}
                 color="white"
-                onPress={() => setModalVisible(true)}
+                onPress={() => {
+                    if (isAdmin) {
+                        setEditName(parkingLot.nome);
+                        setEditCapacity(parkingLot.capacidadeTotal.toString());
+                        setEditModalVisible(true);
+                    } else {
+                        setModalVisible(true);
+                    }
+                }}
                 customSize={64}
             />
 
@@ -434,6 +484,65 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                             }}
                         >
                             Cancelar
+                        </Button>
+                    </View>
+                </Modal>
+
+                {/* Edit Parking Lot Modal (Admin only) */}
+                <Modal
+                    visible={editModalVisible}
+                    onDismiss={() => setEditModalVisible(false)}
+                    contentContainerStyle={{
+                        backgroundColor: 'white',
+                        padding: 24,
+                        marginHorizontal: 20,
+                        borderRadius: 12,
+                    }}
+                >
+                    <Text variant="titleLarge" style={{ marginBottom: 16, fontWeight: 'bold' }}>
+                        Editar Estacionamento
+                    </Text>
+
+                    {modalError && (
+                        <Text style={{ color: theme.colors.error, marginBottom: 12 }}>
+                            {modalError}
+                        </Text>
+                    )}
+
+                    <TextInput
+                        label="Nome do Estacionamento"
+                        value={editName}
+                        onChangeText={setEditName}
+                        mode="outlined"
+                        style={{ marginBottom: 12 }}
+                        disabled={saving}
+                    />
+
+                    <TextInput
+                        label="Capacidade Total"
+                        value={editCapacity}
+                        onChangeText={(text) => setEditCapacity(text.replace(/[^0-9]/g, ''))}
+                        mode="outlined"
+                        style={{ marginBottom: 20 }}
+                        disabled={saving}
+                        keyboardType="numeric"
+                    />
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+                        <Button
+                            mode="text"
+                            onPress={() => setEditModalVisible(false)}
+                            disabled={saving}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            mode="contained"
+                            onPress={handleUpdateParkingLot}
+                            loading={saving}
+                            disabled={saving || !editName.trim() || !editCapacity.trim()}
+                        >
+                            Salvar
                         </Button>
                     </View>
                 </Modal>

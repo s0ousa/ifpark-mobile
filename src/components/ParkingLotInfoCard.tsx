@@ -1,13 +1,16 @@
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { ParkingLot } from '../services/ParkingLotService';
+import Icon from '@react-native-vector-icons/material-design-icons';
 
 type ParkingLotInfoCardProps = {
     parkingLot: ParkingLot;
+    onPress?: () => void;
+    showChevron?: boolean;
 };
 
-export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardProps) {
+export default function ParkingLotInfoCard({ parkingLot, onPress, showChevron = false }: ParkingLotInfoCardProps) {
     const theme = useTheme();
 
     const occupancyRate = (parkingLot.vagasOcupadas / parkingLot.capacidadeTotal) * 100;
@@ -18,7 +21,7 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
         return theme.colors.success || '#4CAF50'; // Green
     }, [occupancyRate, theme]);
 
-    return (
+    const content = (
         <View
             style={{
                 backgroundColor: '#FFFFFF',
@@ -33,19 +36,23 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
                 shadowRadius: 4,
             }}
         >
-            {/* Header with name and status indicator */}
+            {/* Header with name and status indicator or chevron */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <Text variant="titleMedium" style={{ fontWeight: 'bold', flex: 1 }}>
                     {parkingLot.nome}
                 </Text>
-                <View
-                    style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 6,
-                        backgroundColor: statusColor,
-                    }}
-                />
+                {showChevron ? (
+                    <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+                ) : (
+                    <View
+                        style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: 6,
+                            backgroundColor: statusColor,
+                        }}
+                    />
+                )}
             </View>
 
             {/* Available spots info */}
@@ -90,4 +97,10 @@ export default function ParkingLotInfoCard({ parkingLot }: ParkingLotInfoCardPro
             </View>
         </View>
     );
+
+    if (onPress) {
+        return <TouchableOpacity onPress={onPress} activeOpacity={1}>{content}</TouchableOpacity>;
+    }
+
+    return content;
 }
