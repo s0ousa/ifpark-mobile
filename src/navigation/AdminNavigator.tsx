@@ -6,6 +6,9 @@ import { CommonActions } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import AdminCampusScreen from '../screens/admin/AdminCampusScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminUserRegisterScreen from '../screens/admin/AdminUserRegisterScreen';
+import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
+import UserEditScreen from '../screens/admin/UserEditScreen';
 import ParkingLotManagementScreen from '../screens/admin/ParkingLotManagementScreen';
 import ParkingLotDetailsScreen from '../screens/porter/ParkingLotDetailsScreen';
 import PorterProfileScreen from '../screens/porter/PorterProfileScreen';
@@ -19,6 +22,17 @@ function CampusStack() {
             <Stack.Screen name="AdminCampus" component={AdminCampusScreen} />
             <Stack.Screen name="ParkingLotManagement" component={ParkingLotManagementScreen} />
             <Stack.Screen name="ParkingLotDetails" component={ParkingLotDetailsScreen} />
+        </Stack.Navigator>
+    );
+}
+
+function UsersStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
+            <Stack.Screen name="AdminUserRegister" component={AdminUserRegisterScreen} />
+            <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
+            <Stack.Screen name="UserEdit" component={UserEditScreen} />
         </Stack.Navigator>
     );
 }
@@ -92,7 +106,7 @@ export function AdminNavigator() {
             />
             <Tab.Screen
                 name="Users"
-                component={AdminUsersScreen}
+                component={UsersStack}
                 options={{
                     tabBarLabel: 'Usuários',
                     tabBarIcon: ({ color, size }) => (

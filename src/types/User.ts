@@ -4,7 +4,7 @@ export type Pessoa = {
     cpf: string;
     matricula: string;
     tipo: 'ALUNO' | 'SERVIDOR' | 'VISITANTE';
-    status: 'ATIVO' | 'INATIVO';
+    status: 'ATIVO' | 'PENDENTE' | 'REJEITADO';
     telefone: string;
     veiculos?: Array<{
         id: string;
@@ -43,5 +43,7 @@ export type UserProfile = {
 export type UpdateUserData = {
     telefone?: string;
     matricula?: string;
+    papel?: 'ROLE_COMUM' | 'ROLE_VIGIA' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN';
+    status?: 'ATIVO' | 'PENDENTE' | 'REJEITADO';
     endereco?: Partial<Endereco>;
 };

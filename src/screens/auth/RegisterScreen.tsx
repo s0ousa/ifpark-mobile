@@ -48,17 +48,24 @@ export default function RegisterScreen({ navigation }: any) {
 
   const loadCampi = async () => {
     try {
+      console.log('Carregando campi...');
       const data = await CampusService.findAll();
+      console.log('Dados recebidos:', data);
 
       if (data.content && Array.isArray(data.content)) {
         const formattedOptions = data.content.map((c: any) => ({
           label: c.nome,
           value: c.id
         }));
+        console.log('Opções formatadas:', formattedOptions);
         setCampusOptions(formattedOptions);
+      } else {
+        console.error('Estrutura de dados inesperada:', data);
+        Alert.alert("Aviso", "Estrutura de dados de campi inesperada.");
       }
-    } catch (error) {
-      Alert.alert("Aviso", "Não foi possível carregar a lista de campi.");
+    } catch (error: any) {
+      console.error('Erro ao carregar campi:', error);
+      Alert.alert("Aviso", `Não foi possível carregar a lista de campi: ${error.message}`);
     }
   };
   const updateField = (field: string, value: string) => {

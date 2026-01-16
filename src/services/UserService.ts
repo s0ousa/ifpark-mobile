@@ -72,5 +72,29 @@ export const UserService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    createUser: async (userData: any) => {
+        try {
+            const response = await api.post('/usuarios', userData);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao criar usuário");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    changePassword: async (userId: string, novaSenha: string) => {
+        try {
+            const response = await api.put(`/usuarios/${userId}/change-password`, { novaSenha });
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao alterar senha");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };

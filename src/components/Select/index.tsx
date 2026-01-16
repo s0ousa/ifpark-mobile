@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { 
-  TextInput, 
-  Text, 
-  RadioButton, 
-  Button, 
-  useTheme, 
-  Dialog, 
-  Portal, 
-  TouchableRipple 
+import {
+  TextInput,
+  Text,
+  RadioButton,
+  Button,
+  useTheme,
+  Dialog,
+  Portal,
+  TouchableRipple
 } from 'react-native-paper';
 
 type OptionObject = {
@@ -25,17 +25,17 @@ interface SelectProps {
   onSelect: (value: string) => void;
   placeholder?: string;
   error?: boolean;
-  icon?: string | null; 
+  icon?: string | null;
 }
 
-export default function Select({ 
-  label, 
-  value, 
-  options = [], 
-  onSelect, 
+export default function Select({
+  label,
+  value,
+  options = [],
+  onSelect,
   placeholder = "Selecione...",
   error = false,
-  icon = null 
+  icon = null
 }: SelectProps) {
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
@@ -76,29 +76,29 @@ export default function Select({
             editable={false}
             error={error}
             left={icon ? <TextInput.Icon icon={icon} color={theme.colors.secondary} /> : null}
-            right={<TextInput.Icon icon="menu-down" />} 
+            right={<TextInput.Icon icon="menu-down" />}
             style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
           />
         </View>
       </TouchableOpacity>
 
       <Portal>
-        <Dialog visible={visible} onDismiss={hideDialog} style={{ maxHeight: '80%' }}>
+        <Dialog visible={visible} onDismiss={hideDialog} style={{ maxHeight: '80%', backgroundColor: '#FFFFFF' }}>
           <Dialog.Title>{label}</Dialog.Title>
-          
+
           <Dialog.ScrollArea>
             <ScrollView contentContainerStyle={{ paddingHorizontal: 0 }}>
               <RadioButton.Group onValueChange={handleSelect} value={value}>
                 {formattedOptions.map((opt) => (
-                  <TouchableRipple 
-                    key={opt.value} 
+                  <TouchableRipple
+                    key={opt.value}
                     onPress={() => handleSelect(opt.value)}
                     style={styles.radioContainer}
                   >
                     <View style={styles.radioRow}>
-                      <RadioButton.Android 
-                        value={opt.value} 
-                        color={theme.colors.primary} 
+                      <RadioButton.Android
+                        value={opt.value}
+                        color={theme.colors.primary}
                       />
                       <Text variant="bodyLarge" style={{ marginLeft: 8 }}>
                         {opt.label}

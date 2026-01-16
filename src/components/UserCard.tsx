@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Text, Chip, useTheme } from 'react-native-paper';
+import { View, TouchableOpacity } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import Icon from '@react-native-vector-icons/material-design-icons';
 
 type UserData = {
     id: string;
@@ -32,186 +33,129 @@ export default function UserCard({ user, onPress }: UserCardProps) {
     const getRoleName = (papel: string) => {
         switch (papel) {
             case 'ROLE_ADMIN':
-                return 'Admin';
+                return 'Administrador';
             case 'ROLE_VIGIA':
                 return 'Porteiro';
             case 'ROLE_COMUM':
                 return 'Motorista';
+            case 'ROLE_SUPER_ADMIN':
+                return 'Super Admin';
             default:
                 return papel;
         }
     };
 
-    const getRoleColor = (papel: string) => {
+    const getRoleIcon = (papel: string) => {
         switch (papel) {
-            case 'ROLE_ADMIN':
-                return '#9C27B0';
-            case 'ROLE_VIGIA':
-                return '#2196F3';
             case 'ROLE_COMUM':
-                return '#4CAF50';
+                return 'car';
+            case 'ROLE_VIGIA':
+                return 'shield-account';
+            case 'ROLE_ADMIN':
+                return 'security';
+            case 'ROLE_SUPER_ADMIN':
+                return 'security';
             default:
-                return theme.colors.primary;
+                return 'account';
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusIcon = (status: string) => {
         switch (status) {
             case 'ATIVO':
-                return '#4CAF50';
+                return { name: 'check-circle', color: '#4CAF50' };
             case 'PENDENTE':
-                return '#FF9800';
+                return { name: 'clock-outline', color: '#FF9800' };
             case 'REJEITADO':
-                return '#F44336';
+                return { name: 'close-circle', color: '#F44336' };
             default:
-                return '#999';
+                return { name: 'help-circle', color: '#999' };
         }
     };
 
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'ATIVO':
-                return 'Aprovado';
-            case 'PENDENTE':
-                return 'Pendente';
-            case 'REJEITADO':
-                return 'Rejeitado';
+    const formatTipoPessoa = (tipo: string) => {
+        switch (tipo) {
+            case 'ALUNO':
+                return 'Aluno';
+            case 'SERVIDOR':
+                return 'Servidor';
+            case 'TERCEIRIZADO':
+                return 'Terceirizado';
+            case 'VISITANTE':
+                return 'Visitante';
             default:
-                return status;
+                return tipo;
         }
     };
+
+    const statusIcon = getStatusIcon(user.pessoa.status);
 
     return (
-        <Card style={styles.card} onPress={onPress}>
-            <Card.Content style={styles.cardContent}>
-                {/* Header with name and role */}
-                <View style={styles.header}>
-                    <Text variant="titleMedium" style={styles.name}>
+        <TouchableOpacity
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#FFFFFF',
+                marginHorizontal: 16,
+                marginBottom: 8,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                elevation: 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            }}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <View
+                style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: `${theme.colors.secondary}15`,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: 12,
+                }}
+            >
+                <Icon name="account" size={20} color={theme.colors.secondary} />
+            </View>
+
+            <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                    <Text
+                        variant="titleMedium"
+                        style={{ fontWeight: '600', fontSize: 16, color: '#333' }}
+                        numberOfLines={1}
+                    >
                         {user.pessoa.nome}
                     </Text>
-                    <View
-                        style={[
-                            styles.roleBadge,
-                            { backgroundColor: getRoleColor(user.papel) }
-                        ]}
-                    >
-                        <Text style={styles.roleBadgeText}>
-                            {getRoleName(user.papel)}
-                        </Text>
-                    </View>
+                    <Icon name={statusIcon.name as any} size={18} color={statusIcon.color} style={{ marginLeft: 6 }} />
                 </View>
 
-                {/* Info rows */}
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Email:</Text>
-                    <Text style={styles.infoValue}>{user.email}</Text>
-                </View>
+                <Text style={{ fontSize: 13, color: '#666', marginBottom: 6 }} numberOfLines={1}>
+                    {user.pessoa.matricula
+                        ? `${formatTipoPessoa(user.pessoa.tipo)} • Mat: ${user.pessoa.matricula}`
+                        : formatTipoPessoa(user.pessoa.tipo)
+                    }
+                </Text>
 
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Telefone:</Text>
-                    <Text style={styles.infoValue}>{user.pessoa.telefone}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Tipo:</Text>
-                    <Text style={styles.infoValue}>
-                        {user.pessoa.tipo}
-                        {user.pessoa.matricula && ` • Mat: ${user.pessoa.matricula}`}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name={getRoleIcon(user.papel) as any} size={14} color="#666" />
+                    <Text style={{ fontSize: 12, color: '#666', fontWeight: '500' }}>
+                        {getRoleName(user.papel)}
                     </Text>
                 </View>
+            </View>
 
-                {/* Status badge at bottom */}
-                <View style={styles.footer}>
-                    <View
-                        style={[
-                            styles.statusBadge,
-                            { backgroundColor: `${getStatusColor(user.pessoa.status)}20` }
-                        ]}
-                    >
-                        <View
-                            style={[
-                                styles.statusDot,
-                                { backgroundColor: getStatusColor(user.pessoa.status) }
-                            ]}
-                        />
-                        <Text style={[styles.statusText, { color: getStatusColor(user.pessoa.status) }]}>
-                            {getStatusLabel(user.pessoa.status)}
-                        </Text>
-                    </View>
-                </View>
-            </Card.Content>
-        </Card>
+            <View style={{ marginLeft: 8 }}>
+                <Icon name="chevron-right" size={24} color="#999" />
+            </View>
+        </TouchableOpacity>
     );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        marginHorizontal: 16,
-        marginBottom: 12,
-        backgroundColor: '#FFFFFF',
-        elevation: 2,
-    },
-    cardContent: {
-        paddingVertical: 12,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    name: {
-        fontWeight: 'bold',
-        flex: 1,
-        marginRight: 8,
-    },
-    roleBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    roleBadgeText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    infoRow: {
-        flexDirection: 'row',
-        marginBottom: 6,
-    },
-    infoLabel: {
-        fontSize: 14,
-        color: '#666',
-        width: 80,
-        fontWeight: '500',
-    },
-    infoValue: {
-        fontSize: 14,
-        color: '#333',
-        flex: 1,
-    },
-    footer: {
-        marginTop: 8,
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-    },
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        gap: 6,
-    },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    statusText: {
-        fontSize: 13,
-        fontWeight: '600',
-    },
-});
 
 export type { UserData };

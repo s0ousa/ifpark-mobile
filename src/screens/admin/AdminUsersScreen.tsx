@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, RefreshControl } from 'react-native';
 import { Text, useTheme, ActivityIndicator, Searchbar, FAB, Chip } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import AppHeader from '../../components/AppHeader';
 import UserCard, { UserData } from '../../components/UserCard';
@@ -8,45 +9,58 @@ import { UserService } from '../../services/UserService';
 
 type StatusFilter = 'ALL' | 'ATIVO' | 'PENDENTE' | 'REJEITADO';
 
-export default function AdminUsersScreen() {
+export default function AdminUsersScreen({ navigation }: any) {
     const theme = useTheme();
     const [users, setUsers] = useState<UserData[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+    useFocusEffect(
+        React.useCallback(() => {
+            loadUsers();
+        }, [])
+    );
 
     useEffect(() => {
         filterUsers();
     }, [users, searchQuery, statusFilter]);
 
-    const loadUsers = async () => {
+    const loadUsers = async (isRefreshing = false) => {
         try {
-            setLoading(true);
+            if (isRefreshing) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
             setError(null);
             const response = await UserService.getAllUsers(0, 100); // Get all users
             setUsers(response.content);
         } catch (err: any) {
             setError(err.message || 'Erro ao carregar usuários');
         } finally {
-            setLoading(false);
+            if (isRefreshing) {
+                setRefreshing(false);
+            } else {
+                setLoading(false);
+            }
         }
+    };
+
+    const onRefresh = () => {
+        loadUsers(true);
     };
 
     const filterUsers = () => {
         let filtered = users;
 
-        // Apply status filter
         if (statusFilter !== 'ALL') {
             filtered = filtered.filter(user => user.pessoa.status === statusFilter);
         }
 
-        // Apply search filter
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(user =>
@@ -74,11 +88,11 @@ export default function AdminUsersScreen() {
 
     if (loading) {
         return (
-            <View style={styles.container}>
+            <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
                 <AppHeader title="Usuários" />
-                <View style={styles.centerContent}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
-                    <Text style={styles.loadingText}>Carregando usuários...</Text>
+                    <Text style={{ marginTop: 16, color: '#666' }}>Carregando usuários...</Text>
                 </View>
             </View>
         );
@@ -86,48 +100,52 @@ export default function AdminUsersScreen() {
 
     if (error) {
         return (
-            <View style={styles.container}>
+            <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
                 <AppHeader title="Usuários" />
-                <View style={styles.centerContent}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                     <Icon name="alert-circle" size={48} color={theme.colors.error} />
-                    <Text style={styles.errorText}>{error}</Text>
+                    <Text style={{ marginTop: 16, color: '#666', textAlign: 'center' }}>{error}</Text>
                 </View>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
             <AppHeader title="Usuários" />
 
-            <View style={styles.content}>
-                {/* Search Bar */}
+            <View style={{ flex: 1 }}>
                 <Searchbar
                     placeholder="Buscar por nome, email ou CPF"
                     onChangeText={setSearchQuery}
                     value={searchQuery}
-                    style={styles.searchBar}
+                    style={{
+                        marginHorizontal: 16,
+                        marginTop: 16,
+                        marginBottom: 12,
+                        elevation: 2,
+                        backgroundColor: '#FFFFFF',
+                    }}
                     iconColor={theme.colors.primary}
                     inputStyle={{ color: theme.colors.onSurface }}
                 />
 
-                {/* Status Filters */}
-                <View style={styles.filtersContainer}>
-
-                    <View style={styles.filters}>
+                <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                         {(['ALL', 'ATIVO', 'PENDENTE', 'REJEITADO'] as StatusFilter[]).map((filter) => (
                             <Chip
                                 key={filter}
                                 selected={statusFilter === filter}
                                 onPress={() => setStatusFilter(filter)}
-                                style={[
-                                    styles.filterChip,
-                                    statusFilter === filter && { backgroundColor: theme.colors.primary }
-                                ]}
-                                textStyle={[
-                                    styles.filterChipText,
-                                    { color: statusFilter === filter ? '#FFFFFF' : theme.colors.onSurface }
-                                ]}
+                                selectedColor={theme.colors.tertiary}
+                                style={{
+                                    height: 32,
+                                    backgroundColor: statusFilter === filter ? theme.colors.secondary : theme.colors.outline
+                                }}
+                                textStyle={{
+                                    fontSize: 13,
+                                    color: statusFilter === filter ? '#FFFFFF' : theme.colors.onSurface
+                                }}
                             >
                                 {getFilterLabel(filter)}
                             </Chip>
@@ -143,19 +161,31 @@ export default function AdminUsersScreen() {
                         <UserCard
                             user={item}
                             onPress={() => {
-                                // TODO: Navigate to user details
-                                console.log('User clicked:', item.id);
+                                navigation.navigate('UserDetails', { userId: item.id });
                             }}
                         />
                     )}
-                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[theme.colors.primary]}
+                            tintColor={theme.colors.primary}
+                        />
+                    }
+                    contentContainerStyle={{ paddingBottom: 100 }}
                     ListEmptyComponent={
-                        <View style={styles.emptyState}>
+                        <View style={{
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 48,
+                            paddingHorizontal: 24,
+                        }}>
                             <Icon name="account-off" size={64} color={theme.colors.onSurfaceVariant} />
-                            <Text variant="titleMedium" style={styles.emptyText}>
+                            <Text variant="titleMedium" style={{ marginTop: 16, color: '#666', textAlign: 'center' }}>
                                 Nenhum usuário encontrado
                             </Text>
-                            <Text variant="bodyMedium" style={styles.emptySubtext}>
+                            <Text variant="bodyMedium" style={{ marginTop: 8, color: '#999', textAlign: 'center' }}>
                                 {searchQuery || statusFilter !== 'ALL'
                                     ? 'Tente ajustar os filtros'
                                     : 'Não há usuários cadastrados'}
@@ -175,84 +205,10 @@ export default function AdminUsersScreen() {
                         backgroundColor: theme.colors.secondary,
                     }}
                     color="white"
-                    onPress={() => {
-                        // TODO: Navigate to create user screen
-                        console.log('Create user clicked');
-                    }}
+                    onPress={() => navigation.navigate('AdminUserRegister')}
                     customSize={64}
                 />
             </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-    },
-    content: {
-        flex: 1,
-    },
-    centerContent: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-    },
-    loadingText: {
-        marginTop: 16,
-        color: '#666',
-    },
-    errorText: {
-        marginTop: 16,
-        color: '#666',
-        textAlign: 'center',
-    },
-    searchBar: {
-        marginHorizontal: 16,
-        marginTop: 16,
-        marginBottom: 12,
-        elevation: 2,
-        backgroundColor: '#FFFFFF',
-    },
-    filtersContainer: {
-        marginHorizontal: 16,
-        marginBottom: 16,
-    },
-    filterLabel: {
-        color: '#666',
-        marginBottom: 8,
-        fontWeight: '500',
-    },
-    filters: {
-        flexDirection: 'row',
-        gap: 8,
-        flexWrap: 'wrap',
-    },
-    filterChip: {
-        height: 32,
-    },
-    filterChipText: {
-        fontSize: 13,
-    },
-    listContent: {
-        paddingBottom: 100,
-    },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 48,
-        paddingHorizontal: 24,
-    },
-    emptyText: {
-        marginTop: 16,
-        color: '#666',
-        textAlign: 'center',
-    },
-    emptySubtext: {
-        marginTop: 8,
-        color: '#999',
-        textAlign: 'center',
-    },
-});
