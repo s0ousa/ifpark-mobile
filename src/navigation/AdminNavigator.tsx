@@ -9,6 +9,7 @@ import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminUserRegisterScreen from '../screens/admin/AdminUserRegisterScreen';
 import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
 import UserEditScreen from '../screens/admin/UserEditScreen';
+import UserVehiclesScreen from '../screens/admin/UserVehiclesScreen';
 import ParkingLotManagementScreen from '../screens/admin/ParkingLotManagementScreen';
 import ParkingLotDetailsScreen from '../screens/porter/ParkingLotDetailsScreen';
 import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
@@ -33,6 +34,7 @@ function UsersStack() {
             <Stack.Screen name="AdminUserRegister" component={AdminUserRegisterScreen} />
             <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
             <Stack.Screen name="UserEdit" component={UserEditScreen} />
+            <Stack.Screen name="UserVehicles" component={UserVehiclesScreen} />
         </Stack.Navigator>
     );
 }

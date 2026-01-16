@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StatusBar } from 'react-native';
+import { View, ScrollView, StatusBar, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Button, ActivityIndicator, Avatar, FAB } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
@@ -222,6 +222,23 @@ export default function UserDetailsScreen({ route, navigation }: any) {
                             <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Telefone</Text>
                         </View>
                     </View>
+
+                    <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 }}
+                        onPress={() => navigation.navigate('UserVehicles', {
+                            pessoaId: profileData.pessoa.id,
+                            userName: profileData.pessoa.nome
+                        })}
+                    >
+                        <View style={{ width: 40, alignItems: 'center' }}>
+                            <Icon name="car" size={24} color={theme.colors.primary} />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>Veículos</Text>
+                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Veículos cadastrados</Text>
+                        </View>
+                        <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Dados da conta */}

@@ -31,5 +31,27 @@ export const VehicleService = {
             }
             throw new Error("Erro de conexão com o servidor");
         }
+    },
+
+    approve: async (veiculoId: string): Promise<void> => {
+        try {
+            await api.put(`/veiculos/aprovar/${veiculoId}`);
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao aprovar veículo");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    reject: async (veiculoId: string, motivo: string): Promise<void> => {
+        try {
+            await api.put(`/veiculos/rejeitar/${veiculoId}`, { motivo });
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao rejeitar veículo");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
     }
 };
