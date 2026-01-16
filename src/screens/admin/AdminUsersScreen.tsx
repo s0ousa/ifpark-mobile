@@ -5,6 +5,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import AppHeader from '../../components/AppHeader';
 import UserCard, { UserData } from '../../components/UserCard';
+import { CampusService } from '../../services/CampusService';
+import Select from '../../components/Select';
+import { CampusData } from '../../components/CampusInfoCard';
 import { UserService } from '../../services/UserService';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -21,15 +24,33 @@ export default function AdminUsersScreen({ navigation }: any) {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
+    // Super Admin Filter
+    const [campusFilter, setCampusFilter] = useState<string>('ALL');
+    const [campusOptions, setCampusOptions] = useState<{ label: string; value: string }[]>([]);
+
     useFocusEffect(
         React.useCallback(() => {
             loadUsers();
+            if (currentUser?.papel === 'ROLE_SUPER_ADMIN') {
+                loadCampuses();
+            }
         }, [])
     );
 
     useEffect(() => {
         filterUsers();
-    }, [users, searchQuery, statusFilter]);
+    }, [users, searchQuery, statusFilter, campusFilter]);
+
+    const loadCampuses = async () => {
+        try {
+            const response = await CampusService.listCampuses();
+            const campuses: CampusData[] = response.content || [];
+            const options = campuses.map(c => ({ label: c.nome, value: c.id }));
+            setCampusOptions([{ label: 'Todos os Campi', value: 'ALL' }, ...options]);
+        } catch (error) {
+            console.error('Erro ao carregar campi para filtro:', error);
+        }
+    };
 
     const loadUsers = async (isRefreshing = false) => {
         try {
@@ -54,6 +75,9 @@ export default function AdminUsersScreen({ navigation }: any) {
 
     const onRefresh = () => {
         loadUsers(true);
+        if (currentUser?.papel === 'ROLE_SUPER_ADMIN') {
+            loadCampuses();
+        }
     };
 
     const filterUsers = () => {
@@ -62,6 +86,11 @@ export default function AdminUsersScreen({ navigation }: any) {
         // Filter out the currently logged-in user
         if (currentUser?.id) {
             filtered = filtered.filter(user => user.id !== currentUser.id);
+        }
+
+        // Campus Filter (Super Admin only)
+        if (campusFilter !== 'ALL') {
+            filtered = filtered.filter(user => user.campus.id === campusFilter);
         }
 
         if (statusFilter !== 'ALL') {
@@ -136,6 +165,18 @@ export default function AdminUsersScreen({ navigation }: any) {
                     iconColor={theme.colors.primary}
                     inputStyle={{ color: theme.colors.onSurface }}
                 />
+
+                {currentUser?.papel === 'ROLE_SUPER_ADMIN' && (
+                    <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
+                        <Select
+                            label="Filtrar por Campus"
+                            value={campusFilter}
+                            options={campusOptions}
+                            onSelect={setCampusFilter}
+                            icon="domain"
+                        />
+                    </View>
+                )}
 
                 <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
                     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>

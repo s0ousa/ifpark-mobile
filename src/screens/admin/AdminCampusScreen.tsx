@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { View, ScrollView, RefreshControl, StyleSheet, Alert } from 'react-native';
 import { Text, useTheme, ActivityIndicator, Card, FAB, Portal, Modal, Button, TextInput, IconButton } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
@@ -12,9 +12,12 @@ import ParkingLotInfoCard from '../../components/ParkingLotInfoCard';
 import CampusInfoCard from '../../components/CampusInfoCard';
 import { theme } from '../../theme';
 
-export default function AdminCampusScreen({ navigation }: any) {
+export default function AdminCampusScreen({ navigation, route }: any) {
     const theme = useTheme();
     const { user } = useAuthStore();
+
+    // Super Admin passes campusId via params, regular Admin uses their own campusId
+    const { campusId: paramCampusId } = route?.params || {};
 
     const [campusData, setCampusData] = useState<Campus | null>(null);
     const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
@@ -42,21 +45,27 @@ export default function AdminCampusScreen({ navigation }: any) {
     const [newParkingLotCapacity, setNewParkingLotCapacity] = useState('');
 
     const loadData = async () => {
-        if (!user?.id) return;
+        if (!user?.id && !paramCampusId) return;
 
         try {
             setError(null);
             setLoading(true);
 
-            // Get user data to get campus ID
-            const userData = await UserService.getUserById(user.id);
+            let campusIdToUse = paramCampusId;
+
+            // If no campusId provided via params, get it from user data (regular admin)
+            if (!campusIdToUse) {
+                if (!user?.id) return;
+                const userData = await UserService.getUserById(user.id);
+                campusIdToUse = userData.campus.id;
+            }
 
             // Get campus data with statistics
-            const campus = await CampusService.getCampusById(userData.campus.id);
+            const campus = await CampusService.getCampusById(campusIdToUse);
             setCampusData(campus);
             setCampusName(campus.nome);
 
-            const parkingLotsData = await ParkingLotService.getParkingLotsByCampus(userData.campus.id);
+            const parkingLotsData = await ParkingLotService.getParkingLotsByCampus(campusIdToUse);
             setParkingLots(parkingLotsData.content);
         } catch (err: any) {
             setError(err.message || 'Erro ao carregar dados');
@@ -69,7 +78,7 @@ export default function AdminCampusScreen({ navigation }: any) {
     useFocusEffect(
         React.useCallback(() => {
             loadData();
-        }, [user?.id])
+        }, [user?.id, paramCampusId])
     );
 
     const handleRefresh = () => {
@@ -110,6 +119,41 @@ export default function AdminCampusScreen({ navigation }: any) {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleToggleStatus = () => {
+        if (!campusData) return;
+
+        const action = campusData.ativo ? 'desativar' : 'ativar';
+        const Action = campusData.ativo ? 'Desativar' : 'Ativar';
+
+        Alert.alert(
+            `${Action} Campus`,
+            `Tem certeza que deseja ${action} o campus "${campusData.nome}"?`,
+            [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Confirmar',
+                    onPress: async () => {
+                        setSaving(true);
+                        try {
+                            await CampusService.updateStatus(campusData.id, !campusData.ativo);
+                            await loadData();
+                            setEditCampusModalVisible(false);
+                            Alert.alert('Sucesso', `Campus ${campusData.ativo ? 'desativado' : 'ativado'} com sucesso!`);
+                        } catch (error: any) {
+                            Alert.alert('Erro', error.message || `Erro ao ${action} campus`);
+                        } finally {
+                            setSaving(false);
+                        }
+                    },
+                    style: campusData.ativo ? 'destructive' : 'default'
+                }
+            ]
+        );
     };
 
     const handleCreateParkingLot = async () => {
@@ -181,7 +225,11 @@ export default function AdminCampusScreen({ navigation }: any) {
     return (
 
         <View style={styles.container}>
-            <AppHeader title="Campus" />
+            <AppHeader
+                title={paramCampusId && campusData ? campusData.nome : "Campus"}
+                showBackButton={!!paramCampusId}
+                onBackPress={() => navigation.goBack()}
+            />
             <ScrollView
                 style={styles.scrollView}
                 refreshControl={
@@ -273,7 +321,7 @@ export default function AdminCampusScreen({ navigation }: any) {
                         disabled={saving}
                     />
 
-                    <Text variant="titleSmall" style={{ marginTop: 16, marginBottom: 8, fontWeight: 'bold' }}>
+                    <Text variant="titleSmall" style={{ marginBottom: 8, fontWeight: 'bold' }}>
                         Endereço
                     </Text>
 
@@ -344,6 +392,19 @@ export default function AdminCampusScreen({ navigation }: any) {
                         keyboardType="numeric"
                     />
 
+                    {campusData && (
+                        <Button
+                            mode="contained"
+                            onPress={handleToggleStatus}
+                            style={{
+                                backgroundColor: campusData.ativo ? theme.colors.error : theme.colors.tertiary
+                            }}
+                            disabled={saving}
+                        >
+                            {campusData.ativo ? 'Desativar Campus' : 'Ativar Campus'}
+                        </Button>
+                    )}
+
                     <View style={styles.modalActions}>
                         <Button
                             mode="text"
@@ -357,6 +418,9 @@ export default function AdminCampusScreen({ navigation }: any) {
                             onPress={handleSaveCampus}
                             loading={saving}
                             disabled={saving || !campusName.trim()}
+                            style={{
+                                backgroundColor: theme.colors.secondary
+                            }}
                         >
                             Salvar
                         </Button>
@@ -556,6 +620,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     modalActions: {
+        marginTop: 16,
         flexDirection: 'row',
         justifyContent: 'flex-end',
         gap: 8,

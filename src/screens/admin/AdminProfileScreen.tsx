@@ -254,15 +254,17 @@ export default function AdminProfileScreen({ navigation }: any) {
                         </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 }}>
-                        <View style={{ width: 40, alignItems: 'center' }}>
-                            <Icon name="domain" size={24} color={theme.colors.primary} />
+                    {profileData.papel !== 'ROLE_SUPER_ADMIN' && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 }}>
+                            <View style={{ width: 40, alignItems: 'center' }}>
+                                <Icon name="domain" size={24} color={theme.colors.primary} />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.campus.nome}</Text>
+                                <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Campus</Text>
+                            </View>
                         </View>
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{profileData.campus.nome}</Text>
-                            <Text variant="bodySmall" style={{ color: '#666', fontSize: 12 }}>Campus</Text>
-                        </View>
-                    </View>
+                    )}
                 </View>
 
                 {/* Logout Button */}

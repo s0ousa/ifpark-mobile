@@ -18,6 +18,7 @@ export interface Campus {
   totalVagas: number;
   totalVagasOcupadas: number;
   totalVagasLivres: number;
+  ativo: boolean;
 }
 
 export const CampusService = {
@@ -51,6 +52,17 @@ export const CampusService = {
     } catch (error: any) {
       if (error.response && error.response.data) {
         throw new Error(error.response.data.message || 'Erro ao atualizar campus');
+      }
+      throw new Error('Erro de conexão com o servidor');
+    }
+  },
+
+  updateStatus: async (campusId: string, ativo: boolean): Promise<void> => {
+    try {
+      await api.patch(`/campus/${campusId}/status?ativo=${ativo}`);
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.message || 'Erro ao atualizar status do campus');
       }
       throw new Error('Erro de conexão com o servidor');
     }

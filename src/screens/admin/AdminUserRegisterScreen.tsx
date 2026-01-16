@@ -49,13 +49,15 @@ export default function AdminUserRegisterScreen({ navigation }: any) {
     const [loading, setLoading] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
     const [campusName, setCampusName] = useState('');
+    const [campusOptions, setCampusOptions] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
-        loadCampusName();
+        loadCampusInfo();
     }, []);
 
-    const loadCampusName = async () => {
+    const loadCampusInfo = async () => {
         if (user?.campusId) {
+            // Regular Admin: Load specific campus
             try {
                 const campus = await CampusService.getCampusById(user.campusId);
                 setCampusName(campus.nome);
@@ -63,6 +65,17 @@ export default function AdminUserRegisterScreen({ navigation }: any) {
             } catch (error) {
                 console.error('Erro ao carregar campus:', error);
                 setCampusName('Campus não encontrado');
+            }
+        } else if (user?.papel === 'ROLE_SUPER_ADMIN') {
+            // Super Admin: Load all campuses for selection
+            try {
+                const response = await CampusService.listCampuses();
+                const campuses = response.content || [];
+                const options = campuses.map((c: any) => ({ label: c.nome, value: c.id }));
+                setCampusOptions(options);
+            } catch (error) {
+                console.error('Erro ao carregar campi:', error);
+                Alert.alert('Erro', 'Não foi possível carregar a lista de campi');
             }
         }
     };
@@ -208,14 +221,25 @@ export default function AdminUserRegisterScreen({ navigation }: any) {
 
                 <View style={{ marginBottom: 12 }}>
                     <SectionTitle title="Vínculo Institucional" />
-                    <TextInput
-                        mode="outlined"
-                        label="Campus"
-                        value={campusName}
-                        editable={false}
-                        left={<TextInput.Icon icon="office-building-marker" color={theme.colors.secondary} />}
-                        style={{ backgroundColor: theme.colors.surfaceDisabled, marginBottom: 12 }}
-                    />
+                    {user?.papel === 'ROLE_SUPER_ADMIN' ? (
+                        <Select
+                            label="Campus *"
+                            value={formData.campusId}
+                            options={campusOptions}
+                            onSelect={(newValue) => updateField('campusId', newValue)}
+                            icon="domain"
+                            placeholder="Selecione o Campus"
+                        />
+                    ) : (
+                        <TextInput
+                            mode="outlined"
+                            label="Campus"
+                            value={campusName}
+                            editable={false}
+                            left={<TextInput.Icon icon="office-building-marker" color={theme.colors.secondary} />}
+                            style={{ backgroundColor: theme.colors.surfaceDisabled, marginBottom: 12 }}
+                        />
+                    )}
 
                     <Select
                         label="Tipo de Usuário"
