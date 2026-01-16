@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
-import { Text, useTheme, ActivityIndicator, Searchbar, Chip, Portal, Modal, Button, Divider } from 'react-native-paper';
+import { Text, useTheme, ActivityIndicator, Searchbar, Chip, Portal, Modal, Button, Divider, Dialog, TextInput } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import AppHeader from '../../components/AppHeader';
@@ -31,6 +31,11 @@ export default function AdminVehiclesScreen({ navigation }: any) {
     // Modal
     const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Actions
+    const [processing, setProcessing] = useState(false);
+    const [rejectDialogVisible, setRejectDialogVisible] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
 
     const loadData = async () => {
         try {
@@ -100,6 +105,61 @@ export default function AdminVehiclesScreen({ navigation }: any) {
     const openVehicleDetails = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
         setModalVisible(true);
+    };
+
+    const handleApprove = async () => {
+        if (!selectedVehicle) return;
+
+        Alert.alert(
+            'Aprovar Veículo',
+            'Tem certeza que deseja aprovar este veículo?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Aprovar',
+                    onPress: async () => {
+                        try {
+                            setProcessing(true);
+                            await VehicleService.approve(selectedVehicle.id);
+                            Alert.alert('Sucesso', 'Veículo aprovado com sucesso!');
+                            setModalVisible(false);
+                            loadData();
+                        } catch (err: any) {
+                            Alert.alert('Erro', err.message || 'Erro ao aprovar veículo');
+                        } finally {
+                            setProcessing(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleRejectPress = () => {
+        setRejectReason('');
+        setRejectDialogVisible(true);
+    };
+
+    const handleRejectConfirm = async () => {
+        if (!rejectReason.trim()) {
+            Alert.alert('Atenção', 'Por favor, informe o motivo da rejeição');
+            return;
+        }
+
+        if (!selectedVehicle) return;
+
+        try {
+            setProcessing(true);
+            setRejectDialogVisible(false);
+            await VehicleService.reject(selectedVehicle.id, rejectReason);
+            Alert.alert('Sucesso', 'Veículo rejeitado com sucesso!');
+            setModalVisible(false);
+            loadData();
+        } catch (err: any) {
+            Alert.alert('Erro', err.message || 'Erro ao rejeitar veículo');
+        } finally {
+            setProcessing(false);
+        }
     };
 
     const renderHeader = () => (
@@ -251,16 +311,68 @@ export default function AdminVehiclesScreen({ navigation }: any) {
                                 <Text variant="bodyLarge">{selectedVehicle.pessoa.telefone}</Text>
                             </View>
 
-                            <Button
-                                mode="contained"
-                                onPress={() => setModalVisible(false)}
-                                style={{ marginTop: 24 }}
-                            >
-                                Fechar
-                            </Button>
+                            {selectedVehicle.statusAprovacao === 'PENDENTE' && (
+                                <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+                                    <Button
+                                        mode="contained"
+                                        onPress={handleRejectPress}
+                                        style={{ flex: 1, backgroundColor: theme.colors.error }}
+                                        icon="close"
+                                        disabled={processing}
+                                        loading={processing}
+                                    >
+                                        Rejeitar
+                                    </Button>
+                                    <Button
+                                        mode="contained"
+                                        onPress={handleApprove}
+                                        style={{ flex: 1, backgroundColor: theme.colors.secondary }}
+                                        icon="check"
+                                        disabled={processing}
+                                        loading={processing}
+                                    >
+                                        Aprovar
+                                    </Button>
+                                </View>
+                            )}
+
+                            {!processing && (
+                                <Button
+                                    mode="outlined"
+                                    onPress={() => setModalVisible(false)}
+                                    style={{ marginTop: selectedVehicle.statusAprovacao === 'PENDENTE' ? 12 : 24 }}
+                                >
+                                    Fechar
+                                </Button>
+                            )}
                         </View>
                     )}
                 </Modal>
+            </Portal>
+
+            <Portal>
+                <Dialog visible={rejectDialogVisible} onDismiss={() => setRejectDialogVisible(false)} style={{ backgroundColor: theme.colors.background }}>
+                    <Dialog.Title>Rejeitar Veículo</Dialog.Title>
+                    <Dialog.Content>
+                        <Text variant="bodyMedium" style={{ marginBottom: 16 }}>
+                            Por favor, informe o motivo da rejeição:
+                        </Text>
+                        <TextInput
+                            mode="outlined"
+                            label="Motivo da rejeição"
+                            value={rejectReason}
+                            onChangeText={setRejectReason}
+                            multiline
+                            numberOfLines={4}
+                        />
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={() => setRejectDialogVisible(false)}>Cancelar</Button>
+                        <Button onPress={handleRejectConfirm} textColor={theme.colors.error} loading={processing} disabled={processing}>
+                            Rejeitar
+                        </Button>
+                    </Dialog.Actions>
+                </Dialog>
             </Portal>
         </View>
     );
