@@ -10,6 +10,7 @@ import AdminUserRegisterScreen from '../screens/admin/AdminUserRegisterScreen';
 import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
 import UserEditScreen from '../screens/admin/UserEditScreen';
 import UserVehiclesScreen from '../screens/admin/UserVehiclesScreen';
+import AdminVehiclesScreen from '../screens/admin/AdminVehiclesScreen';
 import ParkingLotManagementScreen from '../screens/admin/ParkingLotManagementScreen';
 import ParkingLotDetailsScreen from '../screens/porter/ParkingLotDetailsScreen';
 import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
@@ -44,6 +45,15 @@ function ProfileStack() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="AdminProfile" component={AdminProfileScreen} />
             <Stack.Screen name="UserEdit" component={UserEditScreen} />
+        </Stack.Navigator>
+    );
+}
+
+function VehiclesStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="AdminVehicles" component={AdminVehiclesScreen} />
+            <Stack.Screen name="UserVehicles" component={UserVehiclesScreen} />
         </Stack.Navigator>
     );
 }
@@ -122,6 +132,16 @@ export function AdminNavigator() {
                     tabBarLabel: 'Usuários',
                     tabBarIcon: ({ color, size }) => (
                         <Icon name="account-group" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Vehicles"
+                component={VehiclesStack}
+                options={{
+                    tabBarLabel: 'Veículos',
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="car-multiple" size={size} color={color} />
                     ),
                 }}
             />

@@ -1,23 +1,18 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Chip, Button } from 'react-native-paper';
 import Icon from '@react-native-vector-icons/material-design-icons';
-
-type Vehicle = {
-    id: string;
-    placa: string;
-    modelo: string;
-    statusAprovacao: 'APROVADO' | 'PENDENTE' | 'REJEITADO';
-};
+import { Vehicle } from '../services/VehicleService';
 
 type VehicleCardProps = {
     vehicle: Vehicle;
     showActions?: boolean;
     onApprove?: (vehicleId: string) => void;
     onReject?: (vehicleId: string) => void;
+    onPress?: () => void;
 };
 
-export default function VehicleCard({ vehicle, showActions = false, onApprove, onReject }: VehicleCardProps) {
+export default function VehicleCard({ vehicle, showActions = false, onApprove, onReject, onPress }: VehicleCardProps) {
     const theme = useTheme();
 
     const getStatusBadge = () => {
@@ -51,7 +46,7 @@ export default function VehicleCard({ vehicle, showActions = false, onApprove, o
 
     const badge = getStatusBadge();
 
-    return (
+    const cardContent = (
         <View
             style={{
                 marginHorizontal: 16,
@@ -129,4 +124,14 @@ export default function VehicleCard({ vehicle, showActions = false, onApprove, o
             )}
         </View>
     );
+
+    if (onPress) {
+        return (
+            <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+                {cardContent}
+            </TouchableOpacity>
+        );
+    }
+
+    return cardContent;
 }

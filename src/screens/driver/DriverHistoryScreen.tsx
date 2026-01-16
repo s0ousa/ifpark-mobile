@@ -170,15 +170,14 @@ export default function DriverHistoryScreen() {
             ) : (
                 <>
                     {/* Search Bar */}
-                    <View style={styles.searchContainer}>
-                        <Searchbar
-                            placeholder="Buscar por placa ou estacionamento"
-                            onChangeText={setSearchQuery}
-                            value={searchQuery}
-                            style={styles.searchBar}
-                            iconColor={theme.colors.primary}
-                        />
-                    </View>
+                    <Searchbar
+                        placeholder="Buscar por placa ou estacionamento"
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        style={styles.searchBar}
+                        iconColor={theme.colors.primary}
+                        elevation={1}
+                    />
 
                     {/* Total Counter */}
                     <View style={styles.counterContainer}>
@@ -290,14 +289,11 @@ const styles = StyleSheet.create({
     timeText: {
         flex: 1,
     },
-    searchContainer: {
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
     searchBar: {
-        elevation: 0,
-        backgroundColor: '#F5F5F5',
+        marginHorizontal: 16,
+        marginTop: 16,
+        marginBottom: 8,
+        backgroundColor: '#FFFFFF',
     },
     counterContainer: {
         backgroundColor: '#FFFFFF',

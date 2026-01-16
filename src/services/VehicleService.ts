@@ -5,6 +5,15 @@ export type Vehicle = {
     placa: string;
     modelo: string;
     statusAprovacao: 'APROVADO' | 'PENDENTE' | 'REJEITADO';
+    motivoRejeicao?: string | null;
+    pessoa: {
+        id: string;
+        nome: string;
+        matricula?: string | null;
+        tipo: 'ALUNO' | 'SERVIDOR' | 'VISITANTE';
+        status: string;
+        telefone: string;
+    };
 };
 
 export const VehicleService = {
@@ -28,6 +37,30 @@ export const VehicleService = {
         } catch (error: any) {
             if (error.response && error.response.data) {
                 throw new Error(error.response.data.message || "Erro ao buscar veículos");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    getAllVehicles: async (): Promise<Vehicle[]> => {
+        try {
+            const response = await api.get('/veiculos');
+            return response.data.content || [];
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao buscar todos os veículos");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    getVehiclesByCampus: async (campusId: string): Promise<Vehicle[]> => {
+        try {
+            const response = await api.get(`/veiculos/campus/${campusId}`);
+            return response.data.content || [];
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao buscar veículos do campus");
             }
             throw new Error("Erro de conexão com o servidor");
         }

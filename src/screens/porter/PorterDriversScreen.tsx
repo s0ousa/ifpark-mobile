@@ -216,16 +216,18 @@ export default function PorterDriversScreen() {
                 keyExtractor={item => item.id}
                 ListHeaderComponent={
                     <View>
-                        <View >
-                            <Searchbar
-                                placeholder="Buscar por nome ou placa"
-                                onChangeText={setSearchQuery}
-                                value={searchQuery}
-                                style={{ backgroundColor: '#F5F5F5' }}
-                                iconColor={theme.colors.primary}
-                                inputStyle={{ color: theme.colors.onSurface }}
-                            />
-                        </View>
+                        <Searchbar
+                            placeholder="Buscar por nome ou placa"
+                            onChangeText={setSearchQuery}
+                            value={searchQuery}
+                            style={{
+                                marginBottom: 12,
+                                backgroundColor: '#FFFFFF',
+                            }}
+                            iconColor={theme.colors.primary}
+                            inputStyle={{ color: theme.colors.onSurface }}
+                            elevation={1}
+                        />
 
                         {/* Legend */}
                         <View style={{

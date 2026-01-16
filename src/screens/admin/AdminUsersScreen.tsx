@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, RefreshControl } from 'react-native';
+import { View, FlatList, RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, useTheme, ActivityIndicator, Searchbar, FAB, Chip } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
@@ -45,8 +45,10 @@ export default function AdminUsersScreen({ navigation }: any) {
         try {
             const response = await CampusService.listCampuses();
             const campuses: CampusData[] = response.content || [];
+            // Remove the 'Todos' option from the list itself if we handle it via placeholder or initial state
+            // But Select component needs options. Let's send raw options and handle 'ALL' display via placeholder or initial
             const options = campuses.map(c => ({ label: c.nome, value: c.id }));
-            setCampusOptions([{ label: 'Todos os Campi', value: 'ALL' }, ...options]);
+            setCampusOptions(options);
         } catch (error) {
             console.error('Erro ao carregar campi para filtro:', error);
         }
@@ -122,11 +124,11 @@ export default function AdminUsersScreen({ navigation }: any) {
         }
     };
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
-            <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
+            <View style={styles.container}>
                 <AppHeader title="Usuários" />
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                <View style={styles.centerContent}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                     <Text style={{ marginTop: 16, color: '#666' }}>Carregando usuários...</Text>
                 </View>
@@ -136,9 +138,9 @@ export default function AdminUsersScreen({ navigation }: any) {
 
     if (error) {
         return (
-            <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
+            <View style={styles.container}>
                 <AppHeader title="Usuários" />
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                <View style={styles.centerContent}>
                     <Icon name="alert-circle" size={48} color={theme.colors.error} />
                     <Text style={{ marginTop: 16, color: '#666', textAlign: 'center' }}>{error}</Text>
                 </View>
@@ -147,7 +149,7 @@ export default function AdminUsersScreen({ navigation }: any) {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
+        <View style={styles.container}>
             <AppHeader title="Usuários" />
 
             <View style={{ flex: 1 }}>
@@ -155,26 +157,28 @@ export default function AdminUsersScreen({ navigation }: any) {
                     placeholder="Buscar por nome, email ou CPF"
                     onChangeText={setSearchQuery}
                     value={searchQuery}
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 16,
-                        marginBottom: 12,
-                        elevation: 2,
-                        backgroundColor: '#FFFFFF',
-                    }}
+                    style={styles.searchBar}
                     iconColor={theme.colors.primary}
-                    inputStyle={{ color: theme.colors.onSurface }}
+                    elevation={1}
                 />
 
                 {currentUser?.papel === 'ROLE_SUPER_ADMIN' && (
-                    <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
-                        <Select
-                            label="Filtrar por Campus"
-                            value={campusFilter}
-                            options={campusOptions}
-                            onSelect={setCampusFilter}
-                            icon="domain"
-                        />
+                    <View style={styles.filterRow}>
+                        <View style={{ flex: 1 }}>
+                            <Select
+                                label="Filtrar por Campus"
+                                value={campusFilter === 'ALL' ? '' : campusFilter}
+                                options={campusOptions}
+                                onSelect={setCampusFilter}
+                                icon="domain"
+                                placeholder="Todos os Campi"
+                            />
+                        </View>
+                        {campusFilter !== 'ALL' && (
+                            <TouchableOpacity onPress={() => setCampusFilter('ALL')} style={styles.clearFilterButton}>
+                                <Icon name="close-circle" size={24} color={theme.colors.error} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
 
@@ -187,13 +191,13 @@ export default function AdminUsersScreen({ navigation }: any) {
                                 onPress={() => setStatusFilter(filter)}
                                 selectedColor={theme.colors.tertiary}
                                 style={{
-                                    height: 32,
                                     backgroundColor: statusFilter === filter ? theme.colors.secondary : theme.colors.outline
                                 }}
                                 textStyle={{
                                     fontSize: 13,
                                     color: statusFilter === filter ? '#FFFFFF' : theme.colors.onSurface
                                 }}
+                                showSelectedOverlay
                             >
                                 {getFilterLabel(filter)}
                             </Chip>
@@ -223,12 +227,7 @@ export default function AdminUsersScreen({ navigation }: any) {
                     }
                     contentContainerStyle={{ paddingBottom: 100 }}
                     ListEmptyComponent={
-                        <View style={{
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            paddingVertical: 48,
-                            paddingHorizontal: 24,
-                        }}>
+                        <View style={styles.emptyState}>
                             <Icon name="account-off" size={64} color={theme.colors.onSurfaceVariant} />
                             <Text variant="titleMedium" style={{ marginTop: 16, color: '#666', textAlign: 'center' }}>
                                 Nenhum usuário encontrado
@@ -260,3 +259,37 @@ export default function AdminUsersScreen({ navigation }: any) {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+    },
+    centerContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24
+    },
+    searchBar: {
+        margin: 16,
+        marginBottom: 8,
+        backgroundColor: '#FFFFFF',
+    },
+    filterRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 16,
+        marginBottom: 8,
+    },
+    clearFilterButton: {
+        marginLeft: 8,
+        padding: 4,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+        paddingHorizontal: 24,
+    }
+});

@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   Alert,
+  TouchableOpacity
 } from 'react-native';
 import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import {
@@ -23,7 +24,11 @@ export const CameraScreen: React.FC<CameraScreenProps> = ({ navigation, route })
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    takePicture();
+    // Delay to ensure screen transition is complete before launching native camera
+    const timer = setTimeout(() => {
+      takePicture();
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const requestCameraPermission = async (): Promise<boolean> => {
@@ -135,17 +140,17 @@ export const CameraScreen: React.FC<CameraScreenProps> = ({ navigation, route })
             </Text>
           </>
         ) : (
-          <>
+          <TouchableOpacity onPress={takePicture} style={{ alignItems: 'center' }}>
             <View style={styles.iconContainer}>
               <Text style={styles.icon}>📷</Text>
             </View>
             <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 10, color: theme.colors.primary }}>
-              Aguardando captura
+              Tirar Foto
             </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.primary, textAlign: 'center', paddingHorizontal: 40 }}>
-              Tire uma foto da placa do veículo
+            <Text variant="bodyMedium" style={{ color: theme.colors.primary, textAlign: 'center', paddingHorizontal: 40, marginBottom: 24 }}>
+              Toque aqui para abrir a câmera
             </Text>
-          </>
+          </TouchableOpacity>
         )}
       </View>
     </View>

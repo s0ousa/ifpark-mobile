@@ -36,6 +36,7 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
 
     const { user } = useAuthStore();
     const isAdmin = (user as any)?.papel === 'ROLE_ADMIN';
+    const isSuperAdmin = (user as any)?.papel === 'ROLE_SUPER_ADMIN';
 
     console.log('ParkingLotDetailsScreen - User:', user);
     console.log('ParkingLotDetailsScreen - Papel:', (user as any)?.papel);
@@ -202,9 +203,13 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                     placeholder="Buscar por placa ou nome..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    style={{ backgroundColor: '#F5F5F5' }}
+                    style={{
+                        marginBottom: 8,
+                        backgroundColor: '#FFFFFF',
+                    }}
                     iconColor={theme.colors.primary}
                     inputStyle={{ color: theme.colors.onSurface }}
+                    elevation={1}
                 />
             </View>
         </>
@@ -275,28 +280,65 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                 }
             />
 
-            <FAB
-                icon={isAdmin ? "pencil" : "plus"}
-                style={{
-                    position: 'absolute',
-                    margin: 16,
-                    right: 0,
-                    bottom: 36,
-                    borderRadius: 50,
-                    backgroundColor: theme.colors.secondary,
-                }}
-                color="white"
-                onPress={() => {
-                    if (isAdmin) {
-                        setEditName(parkingLot.nome);
-                        setEditCapacity(parkingLot.capacidadeTotal.toString());
-                        setEditModalVisible(true);
-                    } else {
-                        setModalVisible(true);
-                    }
-                }}
-                customSize={64}
-            />
+            {isSuperAdmin ? (
+                <>
+                    <FAB
+                        icon="pencil"
+                        style={{
+                            position: 'absolute',
+                            margin: 16,
+                            right: 0,
+                            bottom: 110, // Above the register FAB
+                            borderRadius: 50,
+                            backgroundColor: theme.colors.tertiary, // Distinct color for edit
+                        }}
+                        color="white"
+                        onPress={() => {
+                            setEditName(parkingLot.nome);
+                            setEditCapacity(parkingLot.capacidadeTotal.toString());
+                            setEditModalVisible(true);
+                        }}
+                        customSize={56} // Slightly smaller or standard
+                    />
+                    <FAB
+                        icon="plus"
+                        style={{
+                            position: 'absolute',
+                            margin: 16,
+                            right: 0,
+                            bottom: 36,
+                            borderRadius: 50,
+                            backgroundColor: theme.colors.secondary,
+                        }}
+                        color="white"
+                        onPress={() => setModalVisible(true)}
+                        customSize={64}
+                    />
+                </>
+            ) : (
+                <FAB
+                    icon={isAdmin ? "pencil" : "plus"}
+                    style={{
+                        position: 'absolute',
+                        margin: 16,
+                        right: 0,
+                        bottom: 36,
+                        borderRadius: 50,
+                        backgroundColor: theme.colors.secondary,
+                    }}
+                    color="white"
+                    onPress={() => {
+                        if (isAdmin) {
+                            setEditName(parkingLot.nome);
+                            setEditCapacity(parkingLot.capacidadeTotal.toString());
+                            setEditModalVisible(true);
+                        } else {
+                            setModalVisible(true);
+                        }
+                    }}
+                    customSize={64}
+                />
+            )}
 
             <Portal>
                 <Modal
