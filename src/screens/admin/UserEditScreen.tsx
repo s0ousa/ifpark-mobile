@@ -9,6 +9,7 @@ import { ViaCepService } from '../../services/ViaCepService.ts';
 import { CampusService } from '../../services/CampusService.ts';
 import AppHeader from '../../components/AppHeader';
 import Icon from '@react-native-vector-icons/material-design-icons';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const USER_TYPES = [
     { label: 'Aluno', value: 'ALUNO' },
@@ -31,6 +32,10 @@ const USER_STATUS = [
 export default function UserEditScreen({ route, navigation }: any) {
     const theme = useTheme();
     const { userId } = route.params;
+    const { user: currentUser } = useAuthStore();
+
+    // Check if the admin is editing their own profile
+    const isEditingOwnProfile = currentUser?.id === userId;
 
     const [formData, setFormData] = useState({
         nome: '',
@@ -362,7 +367,13 @@ export default function UserEditScreen({ route, navigation }: any) {
                         options={USER_ROLES}
                         onSelect={(newValue) => updateField('papel', newValue)}
                         icon="security"
+                        disabled={isEditingOwnProfile}
                     />
+                    {isEditingOwnProfile && (
+                        <Text variant="bodySmall" style={{ color: '#666', marginTop: 4, marginBottom: 12 }}>
+                            Você não pode alterar seu próprio papel no sistema
+                        </Text>
+                    )}
 
                     <Select
                         label="Status"
@@ -370,6 +381,7 @@ export default function UserEditScreen({ route, navigation }: any) {
                         options={USER_STATUS}
                         onSelect={(newValue) => updateField('status', newValue)}
                         icon="check-circle"
+                        disabled={isEditingOwnProfile}
                     />
                 </View>
 

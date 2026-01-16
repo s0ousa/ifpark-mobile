@@ -26,6 +26,7 @@ interface SelectProps {
   placeholder?: string;
   error?: boolean;
   icon?: string | null;
+  disabled?: boolean;
 }
 
 export default function Select({
@@ -35,7 +36,8 @@ export default function Select({
   onSelect,
   placeholder = "Selecione...",
   error = false,
-  icon = null
+  icon = null,
+  disabled = false
 }: SelectProps) {
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
@@ -66,7 +68,7 @@ export default function Select({
 
   return (
     <>
-      <TouchableOpacity onPress={showDialog} activeOpacity={0.7}>
+      <TouchableOpacity onPress={showDialog} activeOpacity={0.7} disabled={disabled}>
         <View pointerEvents="none">
           <TextInput
             mode="outlined"
@@ -75,9 +77,10 @@ export default function Select({
             value={selectedLabel}
             editable={false}
             error={error}
-            left={icon ? <TextInput.Icon icon={icon} color={theme.colors.secondary} /> : null}
-            right={<TextInput.Icon icon="menu-down" />}
-            style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
+            disabled={disabled}
+            left={icon ? <TextInput.Icon icon={icon} color={disabled ? '#999' : theme.colors.secondary} /> : null}
+            right={<TextInput.Icon icon="menu-down" color={disabled ? '#999' : undefined} />}
+            style={{ backgroundColor: disabled ? theme.colors.surfaceDisabled : theme.colors.surface, marginBottom: 12 }}
           />
         </View>
       </TouchableOpacity>

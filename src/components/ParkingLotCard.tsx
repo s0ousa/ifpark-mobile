@@ -14,10 +14,13 @@ export default function ParkingLotCard({ parkingLot, onPress }: ParkingLotCardPr
     const occupancyRate = (parkingLot.vagasOcupadas / parkingLot.capacidadeTotal) * 100;
 
     const statusColor = useMemo(() => {
+        // If parking lot is inactive, use gray color
+        if (!parkingLot.ativo) return '#9E9E9E';
+
         if (occupancyRate >= 80) return theme.colors.error;
         if (occupancyRate >= 60) return '#FB8C00';
         return theme.colors.success || '#4CAF50';
-    }, [occupancyRate, theme]);
+    }, [occupancyRate, theme, parkingLot.ativo]);
 
     const isFull = parkingLot.vagasLivres === 0;
 
@@ -45,7 +48,9 @@ export default function ParkingLotCard({ parkingLot, onPress }: ParkingLotCardPr
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                         <View style={{ flex: 1, marginRight: 8 }}>
                             <Text variant="titleMedium" style={{ fontWeight: '400', color: theme.colors.onSurface, marginBottom: 2 }}>
-                                {parkingLot.nome}
+                                {parkingLot.nome} {!parkingLot.ativo && (
+                                    <Icon source="cancel" size={22} color="#9E9E9E" />
+                                )}
                             </Text>
                         </View>
                         <Icon source={"chevron-right"} color={theme.colors.textSecondary} size={24} />

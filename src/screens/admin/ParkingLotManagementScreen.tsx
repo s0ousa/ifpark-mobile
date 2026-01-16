@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Text, useTheme, TextInput, Button, Switch, Card, Divider } from 'react-native-paper';
 import AppHeader from '../../components/AppHeader';
-import { ParkingLot } from '../../services/ParkingLotService';
+import { ParkingLot, ParkingLotService } from '../../services/ParkingLotService';
 
 type ParkingLotManagementScreenProps = {
     route: any;
@@ -61,25 +61,27 @@ export default function ParkingLotManagementScreen({ route, navigation }: Parkin
         }
     };
 
-    const handleDelete = () => {
+    const handleToggleStatus = () => {
+        const isActivating = !ativo;
+        const action = isActivating ? 'ativar' : 'desativar';
+        const actionCapitalized = isActivating ? 'Ativar' : 'Desativar';
+
         Alert.alert(
-            'Confirmar Exclusão',
-            'Tem certeza que deseja desativar este estacionamento?',
+            `Confirmar ${actionCapitalized}`,
+            `Tem certeza que deseja ${action} este estacionamento?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
-                    text: 'Desativar',
-                    style: 'destructive',
+                    text: actionCapitalized,
+                    style: isActivating ? 'default' : 'destructive',
                     onPress: async () => {
                         try {
                             setSaving(true);
-                            // TODO: Implement deactivate parking lot
-                            // await ParkingLotService.deactivateParkingLot(parkingLot!.id);
-                            Alert.alert('Sucesso', 'Estacionamento desativado com sucesso!', [
-                                { text: 'OK', onPress: () => navigation.goBack() }
-                            ]);
+                            await ParkingLotService.toggleParkingLotStatus(parkingLot!.id, isActivating);
+                            setAtivo(isActivating);
+                            Alert.alert('Sucesso', `Estacionamento ${isActivating ? 'ativado' : 'desativado'} com sucesso!`);
                         } catch (err: any) {
-                            Alert.alert('Erro', err.message || 'Erro ao desativar estacionamento');
+                            Alert.alert('Erro', err.message || `Erro ao ${action} estacionamento`);
                         } finally {
                             setSaving(false);
                         }
@@ -188,16 +190,16 @@ export default function ParkingLotManagementScreen({ route, navigation }: Parkin
                         {isEditing ? 'Salvar Alterações' : 'Criar Estacionamento'}
                     </Button>
 
-                    {isEditing && ativo && (
+                    {isEditing && (
                         <Button
                             mode="outlined"
-                            onPress={handleDelete}
+                            onPress={handleToggleStatus}
                             disabled={saving}
-                            style={styles.deleteButton}
-                            textColor={theme.colors.error}
-                            icon="delete"
+                            style={ativo ? styles.deleteButton : styles.activateButton}
+                            textColor={ativo ? theme.colors.error : theme.colors.primary}
+                            icon={ativo ? "close-circle" : "check-circle"}
                         >
-                            Desativar Estacionamento
+                            {ativo ? 'Desativar Estacionamento' : 'Ativar Estacionamento'}
                         </Button>
                     )}
 
@@ -270,5 +272,8 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         borderColor: '#EF5350',
+    },
+    activateButton: {
+        borderColor: '#4CAF50',
     },
 });

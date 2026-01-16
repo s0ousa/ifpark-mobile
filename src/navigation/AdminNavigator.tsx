@@ -11,7 +11,7 @@ import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
 import UserEditScreen from '../screens/admin/UserEditScreen';
 import ParkingLotManagementScreen from '../screens/admin/ParkingLotManagementScreen';
 import ParkingLotDetailsScreen from '../screens/porter/ParkingLotDetailsScreen';
-import PorterProfileScreen from '../screens/porter/PorterProfileScreen';
+import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -32,6 +32,15 @@ function UsersStack() {
             <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
             <Stack.Screen name="AdminUserRegister" component={AdminUserRegisterScreen} />
             <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
+            <Stack.Screen name="UserEdit" component={UserEditScreen} />
+        </Stack.Navigator>
+    );
+}
+
+function ProfileStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="AdminProfile" component={AdminProfileScreen} />
             <Stack.Screen name="UserEdit" component={UserEditScreen} />
         </Stack.Navigator>
     );
@@ -116,7 +125,7 @@ export function AdminNavigator() {
             />
             <Tab.Screen
                 name="Profile"
-                component={PorterProfileScreen}
+                component={ProfileStack}
                 options={{
                     tabBarLabel: 'Perfil',
                     tabBarIcon: ({ color, size }) => (

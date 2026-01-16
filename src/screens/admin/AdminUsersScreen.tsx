@@ -6,11 +6,13 @@ import Icon from '@react-native-vector-icons/material-design-icons';
 import AppHeader from '../../components/AppHeader';
 import UserCard, { UserData } from '../../components/UserCard';
 import { UserService } from '../../services/UserService';
+import { useAuthStore } from '../../store/useAuthStore';
 
 type StatusFilter = 'ALL' | 'ATIVO' | 'PENDENTE' | 'REJEITADO';
 
 export default function AdminUsersScreen({ navigation }: any) {
     const theme = useTheme();
+    const { user: currentUser } = useAuthStore();
     const [users, setUsers] = useState<UserData[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -56,6 +58,11 @@ export default function AdminUsersScreen({ navigation }: any) {
 
     const filterUsers = () => {
         let filtered = users;
+
+        // Filter out the currently logged-in user
+        if (currentUser?.id) {
+            filtered = filtered.filter(user => user.id !== currentUser.id);
+        }
 
         if (statusFilter !== 'ALL') {
             filtered = filtered.filter(user => user.pessoa.status === statusFilter);

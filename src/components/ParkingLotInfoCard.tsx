@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text, useTheme, Chip } from 'react-native-paper';
 import { ParkingLot } from '../services/ParkingLotService';
 import Icon from '@react-native-vector-icons/material-design-icons';
 
@@ -16,10 +16,13 @@ export default function ParkingLotInfoCard({ parkingLot, onPress, showChevron = 
     const occupancyRate = (parkingLot.vagasOcupadas / parkingLot.capacidadeTotal) * 100;
 
     const statusColor = useMemo(() => {
+        // If parking lot is inactive, use gray color
+        if (!parkingLot.ativo) return '#9E9E9E';
+
         if (occupancyRate >= 80) return theme.colors.error;
         if (occupancyRate >= 60) return '#FB8C00'; // Orange
         return theme.colors.success || '#4CAF50'; // Green
-    }, [occupancyRate, theme]);
+    }, [occupancyRate, theme, parkingLot.ativo]);
 
     const content = (
         <View
@@ -38,9 +41,14 @@ export default function ParkingLotInfoCard({ parkingLot, onPress, showChevron = 
         >
             {/* Header with name and status indicator or chevron */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Text variant="titleMedium" style={{ fontWeight: 'bold', flex: 1 }}>
-                    {parkingLot.nome}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
+                    <Text variant="titleMedium">
+                        {parkingLot.nome}
+                    </Text>
+                    {!parkingLot.ativo && (
+                        <Icon name="cancel" size={22} color="#9E9E9E" />
+                    )}
+                </View>
                 {showChevron ? (
                     <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
                 ) : (

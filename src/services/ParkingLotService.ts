@@ -6,6 +6,7 @@ type ParkingLot = {
     capacidadeTotal: number;
     vagasOcupadas: number;
     vagasLivres: number;
+    ativo: boolean;
     campus: {
         id: string;
         nome: string;
@@ -71,6 +72,18 @@ export const ParkingLotService = {
         } catch (error: any) {
             if (error.response && error.response.data) {
                 throw new Error(error.response.data.message || "Erro ao atualizar estacionamento");
+            }
+            throw new Error("Erro de conexão com o servidor");
+        }
+    },
+
+    toggleParkingLotStatus: async (parkingLotId: string, ativo: boolean): Promise<ParkingLot> => {
+        try {
+            const response = await api.patch(`/estacionamentos/${parkingLotId}/status?ativo=${ativo}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw new Error(error.response.data.message || "Erro ao alterar status do estacionamento");
             }
             throw new Error("Erro de conexão com o servidor");
         }

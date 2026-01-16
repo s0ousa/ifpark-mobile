@@ -138,6 +138,21 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
         }
     };
 
+    const handleToggleStatus = async () => {
+        setSaving(true);
+        setModalError(null);
+        try {
+            const updatedLot = await ParkingLotService.toggleParkingLotStatus(parkingLot.id, !parkingLot.ativo);
+            setParkingLot(updatedLot);
+            setEditModalVisible(false);
+            await loadData();
+        } catch (err: any) {
+            setModalError(err.message || 'Erro ao alterar status do estacionamento');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const filteredMovements = movements.filter(movement => {
         const query = searchQuery.toLowerCase();
         return (
@@ -527,6 +542,22 @@ export default function ParkingLotDetailsScreen({ route, navigation }: ParkingLo
                         disabled={saving}
                         keyboardType="numeric"
                     />
+
+                    <Button
+                        mode="contained"
+                        icon={parkingLot.ativo ? "close-circle" : "check-circle"}
+                        onPress={handleToggleStatus}
+                        loading={saving}
+                        disabled={saving}
+                        style={{
+                            backgroundColor: parkingLot.ativo ? theme.colors.error : theme.colors.success,
+                            marginBottom: 16
+                        }}
+                    >
+                        {parkingLot.ativo ? 'Desativar estacionamento' : 'Ativar estacionamento'}
+                    </Button>
+
+                    <Divider style={{ marginBottom: 16 }} />
 
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
                         <Button
