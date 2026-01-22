@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Keyboard, Alert } from 'react-native';
+import { View, Keyboard, Alert, Platform } from 'react-native';
 import { TextInput, Button, Text, useTheme, Divider, ActivityIndicator, HelperText } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Select from '../../components/Select';
 
 import { UserService } from '../../services/UserService.ts';
@@ -68,6 +69,8 @@ export default function UserEditScreen({ route, navigation }: any) {
     const [showPassword, setShowPassword] = useState(false);
     const [campusName, setCampusName] = useState('');
 
+    const [campusOptions, setCampusOptions] = useState<any[]>([]);
+
     useEffect(() => {
         loadInitialData();
     }, [userId]);
@@ -99,6 +102,23 @@ export default function UserEditScreen({ route, navigation }: any) {
                 matricula: userData.pessoa.matricula || '',
                 campusId: userData.campus?.id || ''
             });
+
+            // If Super Admin, load campuses
+            if (currentUser?.papel === 'ROLE_SUPER_ADMIN') {
+                try {
+                    const campusData = await CampusService.findAll();
+                    if (campusData && campusData.content) {
+                        const options = campusData.content.map((c: any) => ({
+                            label: c.nome,
+                            value: c.id
+                        }));
+                        setCampusOptions(options);
+                    }
+                } catch (err) {
+                    console.error("Erro ao carregar campi:", err);
+                }
+            }
+
         } catch (error: any) {
             Alert.alert('Erro', error.message || 'Erro ao carregar dados');
             navigation.goBack();
@@ -188,6 +208,10 @@ export default function UserEditScreen({ route, navigation }: any) {
             }
             if (formData.papel !== originalData.papel) {
                 updatePayload.papel = formData.papel;
+            }
+            // Check campus change (only for Super Admin)
+            if (currentUser?.papel === 'ROLE_SUPER_ADMIN' && formData.campusId !== originalData.campus?.id) {
+                updatePayload.campusId = formData.campusId;
             }
 
             // Password (if provided)
@@ -295,7 +319,13 @@ export default function UserEditScreen({ route, navigation }: any) {
                 onBackPress={() => navigation.goBack()}
             />
 
-            <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 40 }}>
+            <KeyboardAwareScrollView
+                contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 40 }}
+                enableOnAndroid={true}
+                extraScrollHeight={100}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 <View style={{ marginBottom: 12 }}>
                     <SectionTitle title="Dados Pessoais" />
                     <TextInput
@@ -333,14 +363,24 @@ export default function UserEditScreen({ route, navigation }: any) {
                 <View style={{ marginBottom: 12 }}>
                     <SectionTitle title="Vínculo Institucional" />
 
-                    <TextInput
-                        mode="outlined"
-                        label="Campus"
-                        value={campusName}
-                        editable={false}
-                        left={<TextInput.Icon icon="office-building-marker" color={theme.colors.secondary} />}
-                        style={{ backgroundColor: theme.colors.surfaceDisabled, marginBottom: 12 }}
-                    />
+                    {currentUser?.papel === 'ROLE_SUPER_ADMIN' ? (
+                        <Select
+                            label="Campus"
+                            value={formData.campusId}
+                            options={campusOptions}
+                            onSelect={(newValue) => updateField('campusId', newValue)}
+                            icon="office-building-marker"
+                        />
+                    ) : (
+                        <TextInput
+                            mode="outlined"
+                            label="Campus"
+                            value={campusName}
+                            editable={false}
+                            left={<TextInput.Icon icon="office-building-marker" color={theme.colors.secondary} />}
+                            style={{ backgroundColor: theme.colors.surfaceDisabled, marginBottom: 12 }}
+                        />
+                    )}
 
                     <Select
                         label="Tipo de Usuário"
@@ -408,11 +448,13 @@ export default function UserEditScreen({ route, navigation }: any) {
                         secureTextEntry={!showPassword}
                         value={passwordData.novaSenha}
                         onChangeText={(t) => updatePasswordField('novaSenha', t)}
+                        autoCapitalize="none"
                         left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
                         right={
                             <TextInput.Icon
                                 icon={showPassword ? "eye-off" : "eye"}
                                 onPress={() => setShowPassword(!showPassword)}
+                                forceTextInputFocus={false}
                             />
                         }
                         style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
@@ -424,12 +466,14 @@ export default function UserEditScreen({ route, navigation }: any) {
                         secureTextEntry={!showPassword}
                         value={passwordData.confirmNovaSenha}
                         onChangeText={(t) => updatePasswordField('confirmNovaSenha', t)}
+                        autoCapitalize="none"
                         left={<TextInput.Icon icon="lock-check" color={theme.colors.secondary} />}
                         error={passwordData.confirmNovaSenha !== '' && passwordData.novaSenha !== passwordData.confirmNovaSenha}
                         right={
                             <TextInput.Icon
                                 icon={showPassword ? "eye-off" : "eye"}
                                 onPress={() => setShowPassword(!showPassword)}
+                                forceTextInputFocus={false}
                             />
                         }
                         style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
@@ -515,7 +559,7 @@ export default function UserEditScreen({ route, navigation }: any) {
                 >
                     Salvar Alterações
                 </Button>
-            </ScrollView>
+            </KeyboardAwareScrollView>
         </View>
     );
 }

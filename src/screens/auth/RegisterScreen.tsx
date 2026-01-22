@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Keyboard, Alert } from 'react-native';
+import { View, Keyboard, Alert, Platform } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, IconButton, Divider, HelperText, ActivityIndicator } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Select from '../../components/Select';
 
 import { CampusService } from '../../services/CampusService.ts';
@@ -188,7 +189,13 @@ export default function RegisterScreen({ navigation }: any) {
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 40 }}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 40 }}
+        enableOnAndroid={true}
+        extraScrollHeight={100}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={{ marginBottom: 12 }}>
           <SectionTitle title="Dados Pessoais" />
           <TextInput
@@ -275,11 +282,13 @@ export default function RegisterScreen({ navigation }: any) {
             secureTextEntry={!showPassword}
             value={formData.senha}
             onChangeText={(t) => updateField('senha', t)}
+            autoCapitalize="none"
             left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
             right={
               <TextInput.Icon
                 icon={showPassword ? "eye-off" : "eye"}
                 onPress={() => setShowPassword(!showPassword)}
+                forceTextInputFocus={false}
               />
             }
             style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
@@ -291,12 +300,14 @@ export default function RegisterScreen({ navigation }: any) {
             secureTextEntry={!showPassword}
             value={formData.confirmSenha}
             onChangeText={(t) => updateField('confirmSenha', t)}
+            autoCapitalize="none"
             left={<TextInput.Icon icon="lock-check" color={theme.colors.secondary} />}
             error={formData.confirmSenha !== '' && formData.senha !== formData.confirmSenha}
             right={
               <TextInput.Icon
                 icon={showPassword ? "eye-off" : "eye"}
                 onPress={() => setShowPassword(!showPassword)}
+                forceTextInputFocus={false}
               />
             }
             style={{ backgroundColor: theme.colors.surface, marginBottom: 12 }}
@@ -385,7 +396,7 @@ export default function RegisterScreen({ navigation }: any) {
           Já tenho conta
         </Button>
 
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, Alert, Platform } from 'react-native';
 import { TextInput, Button, Text, Surface, useTheme, Icon } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function LoginScreen({ navigation }: any) {
@@ -24,7 +25,13 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      enableOnAndroid={true}
+      extraScrollHeight={100}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
 
         <Surface
@@ -104,12 +111,14 @@ export default function LoginScreen({ navigation }: any) {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={securePassword}
+              autoCapitalize="none"
               left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
               right={
                 <TextInput.Icon
                   icon={securePassword ? 'eye' : 'eye-off'}
                   onPress={() => setSecurePassword(!securePassword)}
                   color="#9CA3AF"
+                  forceTextInputFocus={false}
                 />
               }
               style={{ backgroundColor: theme.colors.surface }}
@@ -152,6 +161,6 @@ export default function LoginScreen({ navigation }: any) {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

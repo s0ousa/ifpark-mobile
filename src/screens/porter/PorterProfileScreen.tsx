@@ -4,6 +4,7 @@ import { Text, useTheme, Button, TextInput, ActivityIndicator, Avatar, Portal, M
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { ViaCepService } from '../../services/ViaCepService';
 import { UserService } from '../../services/UserService';
 import { UserProfile } from '../../types/User';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +37,7 @@ export default function PorterProfileScreen() {
     const [cidade, setCidade] = useState('');
     const [estado, setEstado] = useState('');
     const [cep, setCep] = useState('');
+    const [loadingCep, setLoadingCep] = useState(false);
 
     const fetchUserData = async () => {
         if (!user?.id) return;
@@ -67,6 +69,30 @@ export default function PorterProfileScreen() {
             fetchUserData();
         }, [user?.id])
     );
+
+    const handleCepChange = async (text: string) => {
+        let v = text.replace(/\D/g, '');
+        v = v.replace(/^(\d{5})(\d)/, '$1-$2');
+        setCep(v);
+
+        if (v.length === 9) {
+            setLoadingCep(true);
+            try {
+                const addressData = await ViaCepService.getAddress(v);
+                if (addressData) {
+                    setLogradouro(addressData.logradouro);
+                    setBairro(addressData.bairro);
+                    setCidade(addressData.localidade);
+                    setEstado(addressData.uf);
+                }
+            } catch (error: any) {
+                // Silently fail or show small feedback if needed, but standard flow is usually just not filling
+                console.log('Erro ao buscar CEP', error);
+            } finally {
+                setLoadingCep(false);
+            }
+        }
+    };
 
     const handleSavePhone = async () => {
         if (!profileData?.pessoa.id) return;
@@ -296,7 +322,7 @@ export default function PorterProfileScreen() {
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, }}>
                         <View style={{ width: 40, alignItems: 'center' }}>
-                            <Icon name={getRoleIcon(profileData.papel)} size={24} color={theme.colors.primary} />
+                            <Icon name={getRoleIcon(profileData.papel) as any} size={24} color={theme.colors.primary} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text variant="bodyLarge" style={{ fontWeight: '500', marginBottom: 2 }}>{getRoleLabel(profileData.papel)}</Text>
@@ -385,11 +411,13 @@ export default function PorterProfileScreen() {
                         <TextInput
                             label="CEP"
                             value={cep}
-                            onChangeText={setCep}
+                            onChangeText={handleCepChange}
                             mode="outlined"
                             keyboardType="numeric"
+                            maxLength={9}
                             activeOutlineColor={theme.colors.primary}
                             style={{ marginBottom: 12 }}
+                            right={loadingCep ? <TextInput.Icon icon={() => <ActivityIndicator size={20} />} /> : null}
                         />
 
                         <TextInput

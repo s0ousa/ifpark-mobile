@@ -46,4 +46,5 @@ export type UpdateUserData = {
     papel?: 'ROLE_COMUM' | 'ROLE_VIGIA' | 'ROLE_ADMIN' | 'ROLE_SUPER_ADMIN';
     status?: 'ATIVO' | 'PENDENTE' | 'REJEITADO';
     endereco?: Partial<Endereco>;
+    campusId?: string;
 };
