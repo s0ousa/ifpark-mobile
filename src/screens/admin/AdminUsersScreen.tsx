@@ -17,7 +17,6 @@ export default function AdminUsersScreen({ navigation }: any) {
     const theme = useTheme();
     const { user: currentUser } = useAuthStore();
     const [users, setUsers] = useState<UserData[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -37,17 +36,13 @@ export default function AdminUsersScreen({ navigation }: any) {
         }, [])
     );
 
-    useEffect(() => {
-        filterUsers();
-    }, [users, searchQuery, statusFilter, campusFilter]);
-
     const loadCampuses = async () => {
         try {
             const response = await CampusService.listCampuses();
             const campuses: CampusData[] = response.content || [];
-            // Remove the 'Todos' option from the list itself if we handle it via placeholder or initial state
-            // But Select component needs options. Let's send raw options and handle 'ALL' display via placeholder or initial
-            const options = campuses.map(c => ({ label: c.nome, value: c.id }));
+            // Filter only active campus
+            const activeCampuses = campuses.filter(c => c.ativo === true);
+            const options = activeCampuses.map(c => ({ label: c.nome, value: c.id }));
             setCampusOptions(options);
         } catch (error) {
             console.error('Erro ao carregar campi para filtro:', error);
@@ -62,7 +57,7 @@ export default function AdminUsersScreen({ navigation }: any) {
                 setLoading(true);
             }
             setError(null);
-            const response = await UserService.getAllUsers(0, 100); // Get all users
+            const response = await UserService.getAllUsers(0, 100);
             setUsers(response.content);
         } catch (err: any) {
             setError(err.message || 'Erro ao carregar usuários');
@@ -82,7 +77,8 @@ export default function AdminUsersScreen({ navigation }: any) {
         }
     };
 
-    const filterUsers = () => {
+    // Calculate filtered users directly
+    const filteredUsers = React.useMemo(() => {
         let filtered = users;
 
         // Filter out the currently logged-in user
@@ -95,21 +91,21 @@ export default function AdminUsersScreen({ navigation }: any) {
             filtered = filtered.filter(user => user.campus.id === campusFilter);
         }
 
+        // Status Filter
         if (statusFilter !== 'ALL') {
             filtered = filtered.filter(user => user.pessoa.status === statusFilter);
         }
 
+        // Search Filter - only by name
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(user =>
-                user.pessoa.nome.toLowerCase().includes(query) ||
-                user.email.toLowerCase().includes(query) ||
-                user.pessoa.cpf.replace(/\D/g, '').includes(query.replace(/\D/g, ''))
+                user.pessoa.nome.toLowerCase().includes(query)
             );
         }
 
-        setFilteredUsers(filtered);
-    };
+        return filtered;
+    }, [users, searchQuery, statusFilter, campusFilter, currentUser?.id]);
 
     const getFilterLabel = (filter: StatusFilter) => {
         switch (filter) {
@@ -154,7 +150,7 @@ export default function AdminUsersScreen({ navigation }: any) {
 
             <View style={{ flex: 1 }}>
                 <Searchbar
-                    placeholder="Buscar por nome, email ou CPF"
+                    placeholder="Buscar por nome"
                     onChangeText={setSearchQuery}
                     value={searchQuery}
                     style={styles.searchBar}

@@ -71,7 +71,9 @@ export default function AdminUserRegisterScreen({ navigation }: any) {
             try {
                 const response = await CampusService.listCampuses();
                 const campuses = response.content || [];
-                const options = campuses.map((c: any) => ({ label: c.nome, value: c.id }));
+                // Filter only active campus
+                const activeCampuses = campuses.filter((c: any) => c.ativo === true);
+                const options = activeCampuses.map((c: any) => ({ label: c.nome, value: c.id }));
                 setCampusOptions(options);
             } catch (error) {
                 console.error('Erro ao carregar campi:', error);
@@ -148,8 +150,14 @@ export default function AdminUserRegisterScreen({ navigation }: any) {
 
         const { confirmSenha, ...payload } = formData;
 
+        // Don't send empty matricula - send null or omit it
+        const finalPayload = {
+            ...payload,
+            matricula: payload.matricula.trim() || undefined
+        };
+
         try {
-            await UserService.createUser(payload);
+            await UserService.createUser(finalPayload);
             Alert.alert(
                 "Sucesso",
                 "Usuário criado com sucesso!",

@@ -54,7 +54,9 @@ export default function RegisterScreen({ navigation }: any) {
       console.log('Dados recebidos:', data);
 
       if (data.content && Array.isArray(data.content)) {
-        const formattedOptions = data.content.map((c: any) => ({
+        // Filter only active campus
+        const activeCampuses = data.content.filter((c: any) => c.ativo === true);
+        const formattedOptions = activeCampuses.map((c: any) => ({
           label: c.nome,
           value: c.id
         }));
@@ -139,8 +141,14 @@ export default function RegisterScreen({ navigation }: any) {
 
     const { confirmSenha, ...payload } = formData;
 
+    // Don't send empty matricula - send undefined
+    const finalPayload = {
+      ...payload,
+      matricula: payload.matricula.trim() || undefined
+    };
+
     try {
-      const response = await AuthService.register(payload);
+      const response = await AuthService.register(finalPayload);
       console.log(response);
       Alert.alert(
         "Sucesso",

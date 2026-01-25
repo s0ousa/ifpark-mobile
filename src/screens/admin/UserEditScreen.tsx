@@ -108,7 +108,9 @@ export default function UserEditScreen({ route, navigation }: any) {
                 try {
                     const campusData = await CampusService.findAll();
                     if (campusData && campusData.content) {
-                        const options = campusData.content.map((c: any) => ({
+                        // Filter only active campus
+                        const activeCampuses = campusData.content.filter((c: any) => c.ativo === true);
+                        const options = activeCampuses.map((c: any) => ({
                             label: c.nome,
                             value: c.id
                         }));
@@ -227,7 +229,7 @@ export default function UserEditScreen({ route, navigation }: any) {
                 updatePayload.cpf = formData.cpf;
             }
             if (formData.matricula !== originalData.pessoa.matricula) {
-                updatePayload.matricula = formData.matricula;
+                updatePayload.matricula = formData.matricula.trim() || undefined;
             }
             if (formData.tipo !== originalData.pessoa.tipo) {
                 updatePayload.tipo = formData.tipo;

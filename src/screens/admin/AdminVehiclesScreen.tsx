@@ -45,7 +45,9 @@ export default function AdminVehiclesScreen({ navigation }: any) {
             // If Super Admin, fetch campuses for filter
             if (isSuperAdmin && campuses.length === 0) {
                 const campusResponse = await CampusService.listCampuses();
-                setCampuses(campusResponse.content || []);
+                // Filter only active campus
+                const activeCampuses = (campusResponse.content || []).filter((c: any) => c.ativo === true);
+                setCampuses(activeCampuses);
             }
 
             let data: Vehicle[] = [];
